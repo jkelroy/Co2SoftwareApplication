@@ -9,23 +9,81 @@
     <TextView
         android:id="@+id/textView11"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_height="17dp"
+        android:layout_marginTop="24dp"
         android:text="View Screen"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.501"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/tv_test"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:id="@+id/tv_SiteName"
+        android:layout_width="580dp"
+        android:layout_height="46dp"
+        android:layout_marginBottom="8dp"
         android:layout_marginTop="8dp"
-        android:text="Test"
+        android:text="TextView"
+        android:textSize="30sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView11"
+        app:layout_constraintVertical_bias="0.633" />
+
+    <TextView
+        android:id="@+id/tv_OpName"
+        android:layout_width="580dp"
+        android:layout_height="46dp"
+        android:layout_marginTop="8dp"
+        android:text="TextView"
         android:textSize="30sp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView11" />
+        app:layout_constraintTop_toBottomOf="@+id/tv_SiteName" />
+
+    <TextView
+        android:id="@+id/tv_SampleID"
+        android:layout_width="580dp"
+        android:layout_height="46dp"
+        android:layout_marginTop="8dp"
+        android:text="TextView"
+        android:textSize="30sp"
+        app:layout_constraintTop_toBottomOf="@+id/tv_OpName"
+        tools:layout_editor_absoluteX="10dp" />
+
+    <TextView
+        android:id="@+id/tv_Temp"
+        android:layout_width="580dp"
+        android:layout_height="46dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:text="TextView"
+        android:textSize="30sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_SampleID" />
+
+    <TextView
+        android:id="@+id/tv_Comments"
+        android:layout_width="580dp"
+        android:layout_height="46dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginTop="8dp"
+        android:text="TextView"
+        android:textSize="30sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_Temp" />
+
+    <TextView
+        android:id="@+id/tv_TimeDate"
+        android:layout_width="580dp"
+        android:layout_height="46dp"
+        android:layout_marginTop="8dp"
+        android:text="TextView"
+        android:textSize="30sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_Comments" />
 </android.support.constraint.ConstraintLayout>
