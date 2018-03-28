@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">CO2 Flux</string>
+    <string name="meta_data">Meta Data</string>
+    <string name="finish">Finish</string>
+    <string name="date">Date:</string>
+    <string name="time">Time:</string>
+    <string name="gps">GPS:</string>
+    <string name="operator_name">Operator Name:</string>
+    <string name="site_name">Site Name:</string>
+    <string name="plot_number">Plot Number:</string>
+    <string name="tempurature">Tempurature:</string>
+    <string name="todo">todo</string>
+</resources>
