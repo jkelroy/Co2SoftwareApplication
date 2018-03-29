@@ -1,3 +1,8 @@
+/**
+ *  This class constructs all the information on the view viewScreen
+ *  as well as doing statistics on the graphs
+ */
+
 package edu.nau.li_840a_interface;
 
 import android.content.Context;
@@ -16,16 +21,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.FileReader;s
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.String;
 import java.text.DecimalFormat;
-
-/**
- * Created by Andrew on 2/6/2018.
- */
 
 public class viewScreen extends AppCompatActivity {
 
@@ -44,14 +45,11 @@ public class viewScreen extends AppCompatActivity {
     private TextView textIds[];
     private String graphArray[];
 
+    //line graph variables
     private LineGraph co2Graph;
     private LineGraph h2oGraph;
     private LineGraph tempGraph;
     private LineGraph presGraph;
-
-    private TextView slope;
-    private TextView standardError;
-    private TextView rSquared;
 
 
     @Override
@@ -101,6 +99,8 @@ public class viewScreen extends AppCompatActivity {
             InputStreamReader inputReader = new InputStreamReader(inputStream);
             BufferedReader buffReader = new BufferedReader(inputReader);
             metaData = "";
+
+            //get metadata
             String line = buffReader.readLine();
             while(line != null)
             {
@@ -113,6 +113,8 @@ public class viewScreen extends AppCompatActivity {
             inputReader = new InputStreamReader(inputStream);
             buffReader = new BufferedReader(inputReader);
             graphData = "";
+
+            //set up graph data into array
             line = buffReader.readLine();
             while(line != null)
             {
@@ -126,13 +128,14 @@ public class viewScreen extends AppCompatActivity {
             inputReader = new InputStreamReader(inputStream);
             buffReader = new BufferedReader(inputReader);
             imageData = "";
+
+            //get image data
             line = buffReader.readLine();
             while(line != null)
             {
                 imageData += line;
                 line = buffReader.readLine();
             }
-
 
         //return error and null for all data if it cannot open
         } catch (Exception e) {
@@ -159,7 +162,7 @@ public class viewScreen extends AppCompatActivity {
 
         }
 
-
+        //split metadata information
         metaData = metaData.split("\n")[1];
         metaDataArray = metaData.split(",");
 
@@ -184,6 +187,7 @@ public class viewScreen extends AppCompatActivity {
             //format decmil to be three points
             DecimalFormat df = new DecimalFormat("#.0000");
 
+            //set statistic information
             slope.setText("Slope : " + df.format(getSlope(graphArray[0])));
             standardError.setText("Standard Error : " + df.format(getStandardError(graphArray[0])));
             rSquared.setText("R Squared : " + df.format(getRSquared(graphArray[0])));
@@ -212,6 +216,9 @@ public class viewScreen extends AppCompatActivity {
 
     }
 
+    /*
+     *  Click funcionality for showing co2 graph and hiding others
+     */
     public void showCO2(View view)
     {
 
@@ -225,6 +232,9 @@ public class viewScreen extends AppCompatActivity {
 
     }
 
+    /*
+     *  Click funcionality for showing h2o graph and hiding others
+     */
     public void showH2O(View view)
     {
 
@@ -237,6 +247,9 @@ public class viewScreen extends AppCompatActivity {
 
     }
 
+    /*
+     *  Click funcionality for showing temp graph and hiding others
+     */
     public void showTemp(View view)
     {
 
@@ -249,6 +262,9 @@ public class viewScreen extends AppCompatActivity {
 
     }
 
+    /*
+     *  Click funcionality for showing presure graph and hiding others
+     */
     public void showPres(View view)
     {
 
@@ -260,6 +276,12 @@ public class viewScreen extends AppCompatActivity {
         graphIds[2].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
     }
 
+    /*
+     *  param - string of all graphs information
+     *  return - string array of four graphIds
+     *  function takes in all graph inforamtion and splits it into four
+     *  string arrays of each individual graph information for x and y plotting
+     */
     private String[] splitGraphData(String graphFileContents)
     {
 
@@ -277,8 +299,10 @@ public class viewScreen extends AppCompatActivity {
         tempPoints = "";
         presPoints = "";
 
+        //split string into array
         lines = graphFileContents.split("\n");
 
+        //loop through array, add seconds and corresponding y value
         for (count = 1; count < lines.length; count++)
         {
 
@@ -302,6 +326,11 @@ public class viewScreen extends AppCompatActivity {
 
     }
 
+    /*
+     *  param - string of a graphs information
+     *  return - standard error
+     *  function takes in a graph to calculate the standard error on
+     */
     private double getStandardError(String graphPoints){
         double standardError = 0;
         float mean;
@@ -322,12 +351,15 @@ public class viewScreen extends AppCompatActivity {
             tempData = data[i].split(",");
             sumForMean += Float.parseFloat(tempData[1]);
         }
+
         mean = sumForMean / numOfPoints;
+
         //loop through and get sum of (point - mean)^2
         for(int i = 0; i < numOfPoints; i++){
             tempData = data[i].split(",");
             sumForWhole += ((Float.parseFloat(tempData[1]) - mean) * (Float.parseFloat(tempData[1]) - mean));
         }
+
         //divide by n graphPoints//get square root
         standardDeviation = Math.sqrt(sumForWhole/numOfPoints);
         meanSquareRoot = Math.sqrt(numOfPoints);
@@ -336,6 +368,11 @@ public class viewScreen extends AppCompatActivity {
         return standardError;
     }
 
+    /*
+     *  param - string of a graphs information
+     *  return - slope of a graph
+     *  function to calculate slope of a graph
+     */
     private float getSlope(String graphPoints){
         float slope = 0;
         float firstMillisecond;
@@ -352,21 +389,29 @@ public class viewScreen extends AppCompatActivity {
         firstData = tempData[0].split(",");
         lastData = tempData[tempData.length - 1].split(",");
 
+        //get first and last millisecond times
         firstMillisecond = Float.parseFloat(firstData[0]);
         lastMillisecond = Float.parseFloat(lastData[0]);
+
+        //account for milliseconds
         firstMillisecond /= 1000;
         lastMillisecond /= 1000;
 
-
+        //get first and last y values
         firstDataPoint = Float.parseFloat(firstData[1]);
         lastDataPoint = Float.parseFloat(lastData[1]);
 
-
+        //calculate slope
         slope = (lastDataPoint-firstDataPoint)/(lastMillisecond-firstMillisecond);
 
         return slope;
     }
 
+    /*
+     *  param - string of a graphs information
+     *  return - string array of four graphIds
+     *  function to calculate the r squared of a graph
+     */
     private double getRSquared(String graphPoints){
 
         float xTotal = 0;
