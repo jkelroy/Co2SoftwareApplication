@@ -1,3 +1,10 @@
+/*
+ *  Author: Andrew Greene
+ *  Last updated: March 26th, 2018
+ *  Description: Basic Point of navigation for our Application.  User can create a new data set, or
+ *               view previously saved data sets.
+ */
+
 package edu.nau.li_840a_interface;
 
 import android.content.Intent;
@@ -13,6 +20,7 @@ public class homeScreen extends AppCompatActivity {
         setContentView(R.layout.activity_home_screen);
     }
 
+    // The only Functions for this screen are Navigation Buttons.
     public void goNewDataSet(View view)
     {
 

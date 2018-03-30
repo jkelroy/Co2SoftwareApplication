@@ -1,17 +1,18 @@
-package edu.nau.li_840a_interface;
-
-/**
- * Created by Andrew on 1/26/2018.
+/*
+ *  Author: Andrew Greene
+ *  Last updated: March 26th, 2018
+ *  Description: Here the user enters in all of the Relative MetaData pertaining to the data set.
+ *               The data is saved and passed to the next screen(s).  Background Operations are
+ *               Time, Date, and GPS Autofill, and field validation
  */
+
+package edu.nau.li_840a_interface;
 
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Build;
 import android.provider.Settings;
@@ -19,50 +20,87 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.support.annotation.Nullable;
 import android.widget.Button;
 import android.widget.TextView;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.text.DateFormat;
 import android.widget.*;
+import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
-
-
-
-
-
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.EditText;
 
 public class metaData extends AppCompatActivity {
-
 
     ImageButton cameraB;
     private Bitmap image;
     private String currentDateTimeString;
+    private String currentDateTimeFormatted;
     private static final int CAMERA_PIC_REQUEST = 2500;
 
-    private Button b;
-    private TextView t;
+    private Button GPS_b;
+    private TextView GPS_tv;
     private LocationManager locationManager;
     private LocationListener listener;
 
+    // Text Watcher Handles Field Validation, checks after the Text has been changed, Raises Toast
+    private TextWatcher textWatcher = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {}
+
+        @Override
+        public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {}
+
+        @Override
+        public void afterTextChanged(Editable editable) {
+            checkFieldsForEmptyValues();
+        }
+    };
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+
+        Date currentDate = new Date();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.meta_data);
-        TextView tv_Date;
-        //***Time and Date***
 
+        // Instance Variables by ID
+        EditText siteName = (EditText) findViewById(R.id.et_SN);
+        EditText operatorName = (EditText) findViewById(R.id.et_ON);
+        EditText sampleID = (EditText) findViewById(R.id.et_SID);
+        EditText temperature = (EditText) findViewById(R.id.et_Temp);
+        EditText comments = (EditText) findViewById(R.id.et_Com);
+
+
+        // Initiates field Validation, Disables "Finish" button on Screen Creation
+        operatorName.addTextChangedListener(textWatcher);
+        siteName.addTextChangedListener(textWatcher);
+        sampleID.addTextChangedListener(textWatcher);
+        checkFieldsForEmptyValues();
+
+
+        //***Time and Date***
+        TextView tv_Date;
+
+        // Get time
+        currentDateTimeString = DateFormat.getDateTimeInstance().format(currentDate);
+
+        // Set time on screen
         currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
         tv_Date = (TextView) findViewById(R.id.tv_Date);
-        //tv_Time = (TextView) findViewById(R.id.tv_Time);
         tv_Date.setText(currentDateTimeString);
-        //tv_Time.setText(currentDateTimeString);
+
+        // Format time to filename
+        DateFormat dateAndTimeFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        currentDateTimeFormatted = dateAndTimeFormat.format(currentDate);
+
 
         //***Camera***
 
@@ -70,6 +108,7 @@ public class metaData extends AppCompatActivity {
         imageB.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+
                 startActivityForResult(cameraIntent, CAMERA_PIC_REQUEST);
             }
         });
@@ -77,16 +116,16 @@ public class metaData extends AppCompatActivity {
 
         //***GPS***
 
-        t = (TextView) findViewById(R.id.tv_GPS);
-        b = (Button) findViewById(R.id.GPSbutton);
+        GPS_tv = (TextView) findViewById(R.id.tv_GPS);
+        GPS_b = (Button) findViewById(R.id.GPSbutton);
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-
+        // GPS Listener
         listener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                t.setText("\n Longitude: " + location.getLongitude() + "\n Latitude: " + location.getLatitude());
+                GPS_tv.setText("Longitude: " + location.getLongitude() + "; Latitude: " + location.getLatitude());
             }
 
             @Override
@@ -106,10 +145,12 @@ public class metaData extends AppCompatActivity {
                 startActivity(i);
             }
         };
-
         configure_button();
+        // Initiates GPS Search on Create.
+        GPS_b.performClick();
     }
 
+    // Requesting Permissions for GPS
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode){
@@ -121,6 +162,7 @@ public class metaData extends AppCompatActivity {
         }
     }
 
+    // Starts On click Listener for GPS
     void configure_button(){
         // first check for permissions
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -131,30 +173,79 @@ public class metaData extends AppCompatActivity {
             return;
         }
         // this code won't execute IF permissions are not allowed, because in the line above there is return statement.
-        b.setOnClickListener(new View.OnClickListener() {
+        GPS_b.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //IGNORE THIS ERROR.  App still runs, Android Studio thinks I am not checking permissions,
-                //but in reality I am Checking Permissions in the if statement above (noinspection MissingPermission)
+                // IGNORE THIS ERROR.  App still runs, Android Studio thinks I am not checking permissions,
+                // but in reality I am Checking Permissions in the if statement above
+                // (noinspection MissingPermission)
                 locationManager.requestLocationUpdates("gps", 5000, 0, listener);
             }
         });
     }
 
 
-
+    // Helper Function for Camera Functionality
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == CAMERA_PIC_REQUEST) {
+        if (requestCode != CAMERA_PIC_REQUEST){
+
+        }
+        else {
             image = (Bitmap) data.getExtras().get("data"); //If the user hits the back button when Camera is open, data will be NULL and the app will crash
-            //Drawable bitdraw = new BitmapDrawable(getApplicationContext().getResources(),image); //not possible..
             ImageView imageview = (ImageView) findViewById(R.id.ImageView01);
             imageview.setImageBitmap(image);
-
-
         }
     }
 
+    //***Field Validation***
 
+    private  void checkFieldsForEmptyValues(){
+        EditText siteName = (EditText) findViewById(R.id.et_SN);
+        EditText operatorName = (EditText) findViewById(R.id.et_ON);
+        EditText sampleID = (EditText) findViewById(R.id.et_SID);
+        EditText temperature = (EditText) findViewById(R.id.et_Temp);
+        EditText comments = (EditText) findViewById(R.id.et_Com);
+        Button validate = (Button) findViewById(R.id.b_finish);
+
+        String s1 = operatorName.getText().toString();
+        String s2 = siteName.getText().toString();
+        String s3 = sampleID.getText().toString();
+        String s4 = temperature.getText().toString();
+        String s5 = comments.getText().toString();
+
+        if(s1.equals("") || s2.equals("") || s3.equals(""))
+        {
+            validate.setEnabled(false);
+        }
+        else if(s2.contains(" ")){
+            Toast toast1 = Toast.makeText(getApplicationContext(), "Site Name cannot use spaces", Toast.LENGTH_SHORT);
+            toast1.show();
+            validate.setEnabled(false);
+        }
+        else if(s3.contains(" ")){
+            Toast toast2 = Toast.makeText(getApplicationContext(), "Sample ID cannot use spaces", Toast.LENGTH_SHORT);
+            toast2.show();
+            validate.setEnabled(false);
+        }
+
+        else
+        {
+            validate.setEnabled(true);
+        }
+    }
+
+    // Helper Function for Camera Functionality
+    public String BitMapToString(Bitmap bitmap){
+        ByteArrayOutputStream baos=new  ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG,100, baos);
+        byte [] b=baos.toByteArray();
+        String temp= Base64.encodeToString(b, Base64.DEFAULT);
+        return temp;
+    }
+
+
+
+    // "FINISH" Button, goes to the next screen to start a new data set
     public void goGraphScreen(View view)
     {
         Context context = this;
@@ -163,28 +254,42 @@ public class metaData extends AppCompatActivity {
         EditText sampleID = (EditText) findViewById(R.id.et_SID);
         EditText temperature = (EditText) findViewById(R.id.et_Temp);
         EditText comments = (EditText) findViewById(R.id.et_Com);
+        TextView gps =  findViewById(R.id.tv_GPS);
+
 
         String site = siteName.getText().toString();
         String name = operatorName.getText().toString();
         String sampleid = sampleID.getText().toString();
         String temp = temperature.getText().toString();
         String commentS = comments.getText().toString();
+        String gpsString = gps.getText().toString();
+
+
+        // Will probably delete this when the Camera is re worked
+        String imageString = "NA";
+        try
+        {
+            imageString = BitMapToString(image);
+        } catch(Exception exception){
+            //TODO Bring up a snackbar or message asking if they want to take a picture?
+        }
+
 
         Intent graphScreen;
 
         graphScreen = new Intent(this, graphScreen.class);
 
+        // Passing strings to next screen
         graphScreen.putExtra("SITE_NAME", site);
         graphScreen.putExtra("OPERATOR_NAME", name);
         graphScreen.putExtra("SAMPLE_ID", sampleid);
         graphScreen.putExtra("TEMPERATURE", temp);
         graphScreen.putExtra("COMMENTS", commentS );
-        graphScreen.putExtra("PICTURE", image); // TODO: This might work???
-        graphScreen.putExtra("TIME", currentDateTimeString);
-
+        graphScreen.putExtra("IMAGE", imageString);
+        graphScreen.putExtra("TIME", currentDateTimeFormatted);
+        graphScreen.putExtra("GPS", gpsString);
 
         startActivity(graphScreen);
-
 
     }
 

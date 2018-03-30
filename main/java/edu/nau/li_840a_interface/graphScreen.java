@@ -1,3 +1,10 @@
+/*
+ *  Author: James Beasley
+ *  Last updated: March 26th, 2018
+ *  Description: Java file for the graph screen of the application. Contains methods which
+ *               correspond to each button on the screen, as well as a receiver for data from the
+ *               gas analyzer.
+ */
 package edu.nau.li_840a_interface;
 
 import android.content.BroadcastReceiver;
@@ -6,20 +13,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.jjoe64.graphview.GraphView;
-
-import java.io.File;
 import java.io.FileOutputStream;
 import java.lang.ref.WeakReference;
 import java.util.Set;
@@ -30,7 +37,6 @@ public class graphScreen extends AppCompatActivity {
     private TextView textIds[];
     private GraphManager manager;
     private Thread manager_thread;
-    private Thread instrument_thread;
     private SerialReader reader;
 
     @Override
@@ -54,8 +60,6 @@ public class graphScreen extends AppCompatActivity {
         mHandler = new graphScreen.MyHandler(this);
 
         reader = new SerialReader();
-        instrument_thread = new Thread(reader);
-        instrument_thread.start();
 
         manager = new GraphManager(this, graphIds, textIds);
         manager_thread = new Thread(manager);
@@ -63,10 +67,15 @@ public class graphScreen extends AppCompatActivity {
 
     }
 
+    /*
+     *  Runs when the "CO2" button is pressed. Hides every graph except for the CO2 one.
+     */
     public void showCO2(View view)
     {
 
-        graphIds[0].setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+        graphIds[0].setLayoutParams(new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.MATCH_PARENT,
+                                        LinearLayout.LayoutParams.MATCH_PARENT));
         graphIds[1].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
         graphIds[2].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
         graphIds[3].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
@@ -74,46 +83,69 @@ public class graphScreen extends AppCompatActivity {
 
     }
 
+    /*
+     *  Runs when the "H2O" button is pressed. Hides every graph except for the H2O one.
+     */
     public void showH2O(View view)
     {
 
-        graphIds[1].setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+        graphIds[1].setLayoutParams(new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.MATCH_PARENT,
+                                        LinearLayout.LayoutParams.MATCH_PARENT));
         graphIds[2].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
         graphIds[3].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
         graphIds[0].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
 
     }
 
+    /*
+     *  Runs when the "Temp" button is pressed. Hides every graph except for the temperature one.
+     */
     public void showTemp(View view)
     {
 
-        graphIds[2].setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+        graphIds[2].setLayoutParams(new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.MATCH_PARENT,
+                                        LinearLayout.LayoutParams.MATCH_PARENT));
         graphIds[3].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
         graphIds[0].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
         graphIds[1].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
 
     }
 
+    /*
+     *  Runs when the "Pressure" button is pressed. Hides every graph except for the pressure one.
+     */
     public void showPres(View view)
     {
 
-        graphIds[3].setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+        graphIds[3].setLayoutParams(new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.MATCH_PARENT,
+                                        LinearLayout.LayoutParams.MATCH_PARENT));
         graphIds[0].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
         graphIds[1].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
         graphIds[2].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
 
     }
 
+    /*
+     *  Runs when either the "Start Logging" or "Stop Logging" buttons are pressed. Switches the
+     *  text to the appropriate value and tells the graph manager to either start or stop recording
+     *  incoming data points.
+     */
     public void startStopLog(View view)
     {
 
         Button button = findViewById(R.id.logbutton);
 
+        // If the button current says "Start Logging", switch the text and inform the manager
         if (button.getText().equals("Start Logging"))
         {
             button.setText("Stop Logging");
             manager.startlogging();
         }
+
+        // If the button currently says "Stop Logging", switch the text and inform the manager
         else
         {
             button.setText("Start Logging");
@@ -125,7 +157,6 @@ public class graphScreen extends AppCompatActivity {
     public void finalize(View view)
     {
         String reading;
-        Context context;
 
         // Metadata values pulled from previous screen
         String metaSite;
@@ -135,12 +166,13 @@ public class graphScreen extends AppCompatActivity {
         String metaComments;
         String metaTime;
         String metaString;
+        String metaGPS;
+        String imageString;
+        String fileName;
 
         FileOutputStream outStream;
 
         Intent fileScreen;
-
-        context = this;
 
         // Fetch the metadata values
         metaSite = getIntent().getStringExtra("SITE_NAME");
@@ -149,15 +181,15 @@ public class graphScreen extends AppCompatActivity {
         metaTemp = getIntent().getStringExtra("TEMPERATURE");
         metaComments = getIntent().getStringExtra("COMMENTS");
         metaTime = getIntent().getStringExtra("TIME");
+        metaGPS = getIntent().getStringExtra("GPS");
+        imageString = getIntent().getStringExtra("IMAGE");
+
 
         // Construct the CSV file content
-        metaString = "Site Name , " +
-                     metaSite + "\nOperator Name , " +
-                     metaOpName + "\nSample ID , " +
-                     metaSampleId + "\nTemperature , " +
-                     metaTemp + "\nComments , " +
-                     metaComments + "\nTime and Date , " +
-                     metaTime;
+        metaString = "Operator Name,Site Name,Sample ID,Temperature,Comments,Time and Date,GPS\n" +
+                     metaOpName + "," + metaSite + "," + metaSampleId + "," + metaTemp + "," +
+                     metaComments + "," + metaTime + "," + metaGPS;
+
 
         manager.stoplogging();
         manager.deconstruct();
@@ -165,53 +197,62 @@ public class graphScreen extends AppCompatActivity {
 
         reading = manager.toString();
 
+        // Filename
+        fileName = metaSite + "_" + metaSampleId + "_" + metaTime;
+
         try
         {
             // Graph File
-            outStream = openFileOutput("G-" + metaTime + ".txt", Context.MODE_APPEND);
+            outStream = openFileOutput("G-" + fileName + ".csv", Context.MODE_APPEND);
             outStream.write(reading.getBytes());
             outStream.close();
 
             // Metadata File
-            outStream = openFileOutput("M-" + metaTime + ".csv", Context.MODE_APPEND);
+            outStream = openFileOutput("M-" + fileName + ".csv", Context.MODE_APPEND);
             outStream.write(metaString.getBytes());
             outStream.close();
+
+            // Image File
+            if (!imageString.equals("NA"))
+            {
+                outStream = openFileOutput("I-" + fileName + ".png", Context.MODE_APPEND);
+                stringToBitMap(imageString).compress(Bitmap.CompressFormat.PNG, 100, outStream);
+                outStream.close();
+            }
+
         }
         catch(Exception exception)
         {
 
         }
 
-    /*
-        try{
-            //makes metadata file NAMES AFTER METADATA SITENAME
-            File test = new File(context.getFilesDir(), "testMeta2.txt");
-            File testMeta = new File(context.getFilesDir(), ("testMeta - " + name + site + sampleid + temp + ".txt"));
-
-            FileOutputStream outputStream;
-            outputStream = openFileOutput(("testMeta-" + name + site + sampleid + temp + ".txt"), Context.MODE_APPEND);
-            outputStream.write(site.getBytes());
-            outputStream.write(name.getBytes());
-            outputStream.close();
-            outputStream = openFileOutput(("testMeta2.txt"), Context.MODE_APPEND);
-            outputStream.write(site.getBytes());
-            outputStream.write(name.getBytes());
-            outputStream.close();
-
-
-        } catch (Exception e){
-
-        }
-*/
-
         fileScreen = new Intent(this, fileDirectory.class);
         startActivity(fileScreen);
 
     }
 
+    private Bitmap stringToBitMap(String input)
+    {
+        try
+        {
+            byte[] encodedBytes = Base64.decode(input, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(encodedBytes, 0, encodedBytes.length);
+            return bitmap;
+        }
+        catch(Exception exception)
+        {
+            return null;
+        }
+    }
+
+    /////////////////////
+    // USB SERIAL CODE //
+    //  DO NOT MODIFY  //
+    /////////////////////
+
     /*
-* Notifications from UsbService will be received here.
-*/
+     * Notifications from UsbService will be received here.
+     */
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -221,7 +262,7 @@ public class graphScreen extends AppCompatActivity {
                     if (usbService != null)
                     {
                         String initMessage;
-                        initMessage = "<LI840><CFG><OUTRATE>0.5</OUTRATE></CFG></LI840>";
+                        initMessage = "<LI840><CFG><OUTRATE>0.5</OUTRATE></CFG></LI840>\n";
                         usbService.write(initMessage.getBytes());
                     }
                     break;
@@ -322,13 +363,20 @@ public class graphScreen extends AppCompatActivity {
         }
     }
 
-    private class SerialReader implements Runnable
+    ////////////////////////////
+    // END OF USB SERIAL CODE //
+    ////////////////////////////
+
+    private class SerialReader
     {
 
         public String currentStream;
         public String completeStream;
         public boolean communicating;
 
+        /*
+         *
+         */
         public SerialReader()
         {
             currentStream = "";
@@ -343,44 +391,16 @@ public class graphScreen extends AppCompatActivity {
             {
                 return;
             }
-
             if (input.contains("\n"))
             {
-                completeStream = currentStream;
+                currentStream += input;
+                completeStream = currentStream.trim();
                 currentStream = "";
                 manager.updateData(completeStream);
             }
             else
             {
                 currentStream += input;
-            }
-
-        }
-
-        public void run()
-        {
-
-            String ping;
-
-            ping = ping = "<LI840><DATA>?</DATA></LI840>\n";
-
-            while(communicating)
-            {
-
-                if (usbService != null)
-                {
-                    usbService.write(ping.getBytes());
-                }
-
-                try
-                {
-                    Thread.sleep(450);
-                }
-                catch(Exception exception)
-                {
-
-                }
-
             }
 
         }

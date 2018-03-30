@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
 
+
     <uses-feature
         android:name="android.hardware.usb.host"
         android:required="true" />
@@ -43,7 +44,8 @@
 
 
         </activity>
-        <activity android:name= ".fileDirectory">
+        <activity android:name= ".fileDirectory"
+            android:windowSoftInputMode="adjustPan|stateHidden">
 
 
         </activity>

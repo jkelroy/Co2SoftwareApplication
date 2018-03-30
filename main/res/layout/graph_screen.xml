@@ -9,41 +9,41 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dip"
-        android:layout_weight="0.6"
+        android:layout_weight="0.7"
         android:orientation="vertical">
 
         <com.jjoe64.graphview.GraphView
             android:id="@+id/graph1"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent"/>
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
         <com.jjoe64.graphview.GraphView
             android:id="@+id/graph2"
-            android:layout_height="0dip"
-            android:layout_width="match_parent"/>
+            android:layout_width="match_parent"
+            android:layout_height="0dip" />
 
         <com.jjoe64.graphview.GraphView
             android:id="@+id/graph3"
-            android:layout_height="0dip"
-            android:layout_width="match_parent"/>
+            android:layout_width="match_parent"
+            android:layout_height="0dip" />
 
         <com.jjoe64.graphview.GraphView
             android:id="@+id/graph4"
-            android:layout_height="0dip"
-            android:layout_width="match_parent"/>
+            android:layout_width="match_parent"
+            android:layout_height="0dip" />
 
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dip"
-        android:layout_weight="0.4"
+        android:layout_weight="0.3"
         android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dip"
-            android:layout_weight="0.1"
+            android:layout_weight="0.2"
             android:orientation="horizontal">
 
             <TextView
@@ -61,8 +61,8 @@
                 android:layout_height="match_parent"
                 android:layout_weight="0.25"
                 android:gravity="bottom"
-                android:textStyle="bold"
-                android:textAlignment="center"/>
+                android:textAlignment="center"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tempdisplay"
@@ -70,8 +70,8 @@
                 android:layout_height="match_parent"
                 android:layout_weight="0.25"
                 android:gravity="bottom"
-                android:textStyle="bold"
-                android:textAlignment="center"/>
+                android:textAlignment="center"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/presdisplay"
@@ -79,72 +79,72 @@
                 android:layout_height="match_parent"
                 android:layout_weight="0.25"
                 android:gravity="bottom"
-                android:textStyle="bold"
-                android:textAlignment="center"/>
+                android:textAlignment="center"
+                android:textStyle="bold" />
 
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dip"
-            android:layout_weight="0.2"
+            android:layout_weight="0.4"
             android:orientation="horizontal">
 
             <Button
                 android:id="@+id/co2button"
-                android:text="CO2"
-                android:onClick="showCO2"
                 android:layout_width="0dip"
                 android:layout_height="match_parent"
-                android:layout_weight="0.25"/>
+                android:layout_weight="0.25"
+                android:onClick="showCO2"
+                android:text="CO2" />
 
             <Button
                 android:id="@+id/h2obutton"
-                android:text="H20"
-                android:onClick="showH2O"
                 android:layout_width="0dip"
                 android:layout_height="match_parent"
-                android:layout_weight="0.25" />
+                android:layout_weight="0.25"
+                android:onClick="showH2O"
+                android:text="H20" />
 
             <Button
                 android:id="@+id/tempbutton"
-                android:text="Temp"
-                android:onClick="showTemp"
                 android:layout_width="0dip"
                 android:layout_height="match_parent"
-                android:layout_weight="0.25"/>
+                android:layout_weight="0.25"
+                android:onClick="showTemp"
+                android:text="Temp" />
 
             <Button
                 android:id="@+id/presbutton"
-                android:text="Pressure"
-                android:onClick="showPres"
                 android:layout_width="0dip"
                 android:layout_height="match_parent"
-                android:layout_weight="0.25"/>
+                android:layout_weight="0.25"
+                android:onClick="showPres"
+                android:text="Pressure" />
 
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dip"
-            android:layout_weight="0.2"
+            android:layout_weight="0.4"
             android:orientation="horizontal">
 
             <Button
                 android:id="@+id/logbutton"
-                android:text="Start Logging"
-                android:onClick="startStopLog"
                 android:layout_width="0dip"
                 android:layout_height="match_parent"
-                android:layout_weight="0.5"/>
+                android:layout_weight="0.5"
+                android:onClick="startStopLog"
+                android:text="Start Logging" />
 
             <Button
                 android:id="@+id/finalbutton"
-                android:text="Finalize"
-                android:onClick="finalize"
                 android:layout_width="0dip"
                 android:layout_height="match_parent"
-                android:layout_weight="0.5"/>
+                android:layout_weight="0.5"
+                android:onClick="finalize"
+                android:text="Finalize" />
 
         </LinearLayout>
 

@@ -1,9 +1,17 @@
+/*
+ *  Author: James Beasley
+ *  Last updated: March 26th, 2018
+ *  Description: Handles the initialization and updating of the graphs, keeping a log of all every
+ *               data point, and converting that log into a string to it can be written to a file
+ *               in the graph screen Java file. Implements the Runnable interface so that the graph
+ *               updating can be done on its own thread, and not have to share with the main
+ *               application thread.
+ */
 package edu.nau.li_840a_interface;
 
 import android.app.Activity;
 import android.graphics.Color;
 import android.widget.TextView;
-
 import com.jjoe64.graphview.GraphView;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,7 +43,7 @@ public class GraphManager implements Runnable
     ///////////////
     // CONSTANTS //
     ///////////////
-    private static final int SLEEP_TIME = 500;
+    private static final int SLEEP_TIME = 1000;
 
 
     /*
@@ -53,13 +61,13 @@ public class GraphManager implements Runnable
         dataArray = new ArrayList<DataSeries>();
 
         // Initialize all of the graphs
-        co2Graph = new LineGraph(graphIds[0], "CO2 Readings", "Time", "CO2",
+        co2Graph = new LineGraph(graphIds[0], "CO2", "Time", "CO2",
                 Color.argb(100, 0, 0, 0));
-        h2oGraph = new LineGraph(graphIds[1], "H2O Readings", "Time", "H2O",
+        h2oGraph = new LineGraph(graphIds[1], "H2O", "Time", "H2O",
                 Color.argb(100, 0, 0, 255));
-        tempGraph = new LineGraph(graphIds[2], "Temperature Readings", "Time", "Temperature",
+        tempGraph = new LineGraph(graphIds[2], "Temperature", "Time", "Temperature",
                 Color.argb(100, 255, 0, 0));
-        presGraph = new LineGraph(graphIds[3], "Pressure Readings", "Time", "Pressure",
+        presGraph = new LineGraph(graphIds[3], "Pressure", "Time", "Pressure",
                 Color.argb(100, 0, 255, 0));
 
         // Get the IDs for the text views used to display the data values
@@ -107,23 +115,33 @@ public class GraphManager implements Runnable
             timeDiff = currentTime - startTime;
 
             // Add the points to the graphs
-            this.addPoints(data, timeDiff);
-
             try
             {
-                // Wait half a second
-                Thread.sleep(SLEEP_TIME);
+                this.addPoints(data, timeDiff);
+            }
+            catch(Exception exception)
+            {
 
+            }
+
+            // Wait the specified wait time
+            try
+            {
+                Thread.sleep(SLEEP_TIME);
             }
             catch (Exception exception)
             {
-                System.out.println("CANT SLEEP");
+
             }
 
         }
 
     }
 
+    /*
+     *  This method is used by the SerialReader object to update the most recent full line from the
+     *  gas analyzer.
+     */
     public void updateData(String data)
     {
         lastData = data;
@@ -134,19 +152,18 @@ public class GraphManager implements Runnable
     //////////////////////
 
     /*
-     *  Runs when the "Finalize" button is clicked.
+     *  Runs when the "Finalize" button is clicked. Tells the graph update loop to stop.
      */
     public void deconstruct()
     {
 
         running = false;
 
-        // TODO: Create new folder and save files inside of it
-
     }
 
     /*
-     *  Runs when the "Start Log" button is clicked.
+     *  Runs when the "Start Log" button is clicked. Initializes the data log, and toggles the
+     *  variable which specifies if we should be saving points.
      */
     public void startlogging()
     {
@@ -160,7 +177,8 @@ public class GraphManager implements Runnable
     }
 
     /*
-     *  Runs when the "Stop Log" button is clicked.
+     *  Runs when the "Stop Log" button is clicked. Toggles the variable which specifies if we
+     *  should be saving points.
      */
     public void stoplogging()
     {
@@ -170,8 +188,8 @@ public class GraphManager implements Runnable
     }
 
     /*
-     *  Allows the graph manager to be printed. This is used for storing the
-     *  data of all graphs in a text file.
+     *  Allows the graph manager to be printed. This is used for storing the data of all the graphs
+     *  in a text file.
      */
     public String toString()
     {
@@ -180,6 +198,8 @@ public class GraphManager implements Runnable
 
         // Initialize the output string
         output = "";
+
+        output += "Milliseconds,CO2,H2O,Temperature,Pressure\n";
 
         // Loop through each data series in the data array
         for (DataSeries series : dataArray)
@@ -200,7 +220,7 @@ public class GraphManager implements Runnable
     ///////////////////////
 
     /*
-     *
+     *  Simple getter function. Returns the last full line received from the serial reader.
      */
     private String getData()
     {
@@ -212,13 +232,19 @@ public class GraphManager implements Runnable
      *  DataSeries, adds that DataSeries to the log, and updates each
      *  graph using the new information.
      */
-    private void addPoints(String data, long time)
+    private void addPoints(String data, long time) throws Exception
     {
 
         final DataSeries newSeries;
 
         // Initialize the new data series
         newSeries = new DataSeries(data, time);
+
+        // If the data point is invalid, do not add it to the data array or graphs
+        if (newSeries.co2 == 0 || newSeries.h2o == 0 || newSeries.temp == 0 || newSeries.pres == 0)
+        {
+            return;
+        }
 
         // Add the new data series to the array of all data series
         if (logging)
@@ -231,6 +257,7 @@ public class GraphManager implements Runnable
         h2oGraph.addPoint(newSeries.h2o, newSeries.time);
         tempGraph.addPoint(newSeries.temp, newSeries.time);
         presGraph.addPoint(newSeries.pres, newSeries.time);
+
 
         // These updates must be run on the UI thread in order to work
         activity.runOnUiThread(new Runnable() {
@@ -274,11 +301,13 @@ public class GraphManager implements Runnable
 
             float[] parse;
 
+            // Save the time the data series was initialized at
             this.time = time;
 
-            // TODO: Parse data string for values and assign the variables
+            // Get an array of all the parsed values from the data
             parse = parseData(data);
 
+            // Assign each value of the array to the class member variable
             co2 = parse[0];
             h2o = parse[1];
             temp = parse[2];
@@ -291,10 +320,10 @@ public class GraphManager implements Runnable
 
             float[] output;
 
-            System.out.println("DATA: " + data);
-
+            // Initialize our array which will hold all the parsed values
             output = new float[4];
 
+            // Try to parse out the CO2
             try
             {
                 output[0] = stringToFloat(data.split("<co2>")[1].split("</co2>")[0]);
@@ -304,6 +333,7 @@ public class GraphManager implements Runnable
                 output[0] = (float) 0.0;
             }
 
+            // Try to parse out the H2O
             try
             {
                 output[1] = Float.parseFloat(data.split("<h2o>")[1].split("</h2o>")[0]);
@@ -313,6 +343,7 @@ public class GraphManager implements Runnable
                 output[1] = (float) 0.0;
             }
 
+            // Try to parse out the temperature
             try
             {
                 output[2] = stringToFloat(data.split("<celltemp>")[1].split("</celltemp>")[0]);
@@ -322,6 +353,7 @@ public class GraphManager implements Runnable
                 output[2] = (float) 0.0;
             }
 
+            // Try to parse out the pressure
             try
             {
                 output[3] = stringToFloat(data.split("<cellpres>")[1].split("</cellpres>")[0]);
@@ -331,10 +363,16 @@ public class GraphManager implements Runnable
                 output[3] = (float) 0.0;
             }
 
+            // Return an array of all the parsed values
             return output;
 
         }
 
+        /*
+         *  In the data lines received from the gas analyzer, numbers are represented using a form
+         *  of scientific notation. This function takes in a string of that and converts it to a
+         *  usable, numerical float.
+         */
         private float stringToFloat(String input)
         {
 
@@ -342,16 +380,18 @@ public class GraphManager implements Runnable
             float number;
             int exponent;
 
+            // Parse out the number, and the exponent
             number = Float.parseFloat(input.split("e")[0]);
             exponent = Integer.parseInt(input.split("e")[1]);
 
+            // Multiply the number by the exponent
             for (count = 0; count < exponent; count++)
             {
                 number *= 10;
             }
 
+            // Return our final, calculated value
             return number;
-
 
         }
 
@@ -367,13 +407,8 @@ public class GraphManager implements Runnable
             // Initialize our output string
             output = "";
 
-            // Build the string using our values
-            output += "Milliseconds: " + time + " (";
-            output += "CO2: " + co2 + ", ";
-            output += "H2O: " + h2o + ", ";
-            output += "Temp: " + temp + ", ";
-            output += "Pressure: " + pres;
-            output += ")";
+            // Add each value to the output string
+            output += time + "," + co2 + "," + h2o + "," + temp + "," + pres;
 
             // Return the output
             return output;
