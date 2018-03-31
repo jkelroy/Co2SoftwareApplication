@@ -52,7 +52,7 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
 
     StringBuilder selectedStringB = new StringBuilder();
     EditText et_Filter;
-    Button btnSend, btnView, btnDel, btnFilter, btnUndo;
+    Button btnSend, btnView, btnDel, btnFilter, btnUndo, btnHome;
     private ListView lv;
     String message;
     String line;
@@ -256,6 +256,10 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
         btnView = (Button) findViewById(R.id.btn_view);
         btnDel = (Button) findViewById(R.id.btn_delete);
         btnFilter =(Button) findViewById(R.id.btn_filter);
+        btnHome = (Button) findViewById(R.id.button5);
+       // btnFilter.setBackgroundResource(android.R.drawable.btn_default);
+       // btnDel.setBackgroundResource(android.R.drawable.btn_default);
+      // btnHome.setBackgroundResource(android.R.drawable.btn_default);
         btnSend.setOnClickListener(this);
         btnView.setOnClickListener(this);
         btnView.setClickable(false);
@@ -275,7 +279,7 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
             public void onClick(View view) {
                 if(et_Filter.getText().toString().equals("") ){return;}
                 btnUndo.setClickable(true);
-                btnUndo.setBackgroundColor(Color.LTGRAY);
+                btnUndo.setBackgroundResource(android.R.drawable.btn_default);
                 int listSize = lv.getCount();
                 String filter = et_Filter.getText().toString();
                 for (int l = 0; l < lv.getCount(); l++){
@@ -319,7 +323,7 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
                     if(context.getFilesDir().list()[i].contains(metaCheck)){
                         appFiles.add(context.getFilesDir().list()[i].substring(2));}
                 }
-                btnFilter.setBackgroundColor(Color.LTGRAY);
+                btnFilter.setBackgroundResource(android.R.drawable.btn_default);
                 btnFilter.setClickable(true);
                 Collections.reverse(appFiles);
 
@@ -404,16 +408,16 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
         if (lv.getCheckedItemCount() > 0 && lv.getCheckedItemCount() != 1) {
             btnView.setClickable(false);
             btnView.setBackgroundColor(Color.TRANSPARENT);
-            btnSend.setBackgroundColor(Color.LTGRAY);
+            btnSend.setBackgroundResource(android.R.drawable.btn_default);
             btnSend.setClickable(true);
 
 
         } if(lv.getCheckedItemCount() == 1) {
 
             btnSend.setClickable(true);
-            btnSend.setBackgroundColor(Color.LTGRAY);
+            btnSend.setBackgroundResource(android.R.drawable.btn_default);
             btnView.setClickable(true);
-            btnView.setBackgroundColor(Color.LTGRAY);
+            btnView.setBackgroundResource(android.R.drawable.btn_default);
         }
         if(lv.getCheckedItemCount() == 0){
             btnSend.setBackgroundColor(Color.TRANSPARENT);

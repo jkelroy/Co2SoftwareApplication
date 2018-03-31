@@ -15,6 +15,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -137,11 +138,15 @@ public class graphScreen extends AppCompatActivity {
     {
 
         Button button = findViewById(R.id.logbutton);
+        Button finalizeButton = findViewById(R.id.finalbutton);
 
         // If the button current says "Start Logging", switch the text and inform the manager
         if (button.getText().equals("Start Logging"))
         {
             button.setText("Stop Logging");
+            finalizeButton.setBackgroundColor(Color.TRANSPARENT);
+            finalizeButton.setEnabled(false);
+            //manager.resetGraphs();
             manager.startlogging();
         }
 
@@ -149,6 +154,8 @@ public class graphScreen extends AppCompatActivity {
         else
         {
             button.setText("Start Logging");
+            finalizeButton.setBackgroundResource(android.R.drawable.btn_default);
+            finalizeButton.setEnabled(true);
             manager.stoplogging();
         }
 

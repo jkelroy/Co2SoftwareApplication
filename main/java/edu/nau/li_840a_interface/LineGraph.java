@@ -28,7 +28,7 @@ public class LineGraph
     ///////////////
     // Constants //
     ///////////////
-    private static final int MAX_DATA_POINTS = 240;
+    private static final int MAX_DATA_POINTS = 120;
 
     /*
      *  Constructor for a live line graph. Allows the graph to have points added to it dynamically.
@@ -94,7 +94,7 @@ public class LineGraph
 
         GridLabelRenderer gridLabel;
         String[] points;
-        long time;
+        float time;
         float value;
 
         // Assign the graph to an interface ID
@@ -130,7 +130,7 @@ public class LineGraph
             {
 
                 // Parse out the milliseconds and value
-                time = Long.parseLong(point.split(",")[0]);
+                time = Float.parseFloat(point.split(",")[0]);
                 value = Float.parseFloat(point.split(",")[1]);
 
                 // Add the new data point to the series
@@ -165,7 +165,7 @@ public class LineGraph
      *  Adds a point to a dynamic graph at the specified time and value. If the graph has been
      *  initialized as a static graph, then the method does not add the point.
      */
-    public void addPoint(float value, long time)
+    public void addPoint(float value, float time)
     {
 
         // If the graph is static, and not dynamic, do not add the point
@@ -176,6 +176,8 @@ public class LineGraph
 
         // Scale the viewport to a little more than the highest Y value
         graph.getViewport().setMaxY(series.getHighestValueY() * 1.25);
+
+        graph.getViewport().setMinY(series.getLowestValueY() * 0.75);
 
         // Add the point to the series
         series.appendData(new DataPoint(time, value), false, MAX_DATA_POINTS);
@@ -192,6 +194,12 @@ public class LineGraph
 
     }
 
+    public void reset()
+    {
+        //series = new LineGraphSeries<>(new DataPoint[] {});
+        //graph.addSeries(series);
+
+    }
 }
 
 

@@ -12,6 +12,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.jjoe64.graphview.GraphView;
+
+import org.apache.commons.math3.stat.regression.SimpleRegression;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -74,6 +77,7 @@ public class viewScreen extends AppCompatActivity {
         TextView slope = findViewById(R.id.slope);
         TextView standardError = findViewById(R.id.standarderror);
         TextView rSquared = findViewById(R.id.rsquared);
+
 
 
         //graph ids array
@@ -181,7 +185,7 @@ public class viewScreen extends AppCompatActivity {
 
             graphArray = splitGraphData(graphData);
 
-            //format decmil to be three points
+            //format decimal to be three points
             DecimalFormat df = new DecimalFormat("#.0000");
 
             slope.setText("Slope : " + df.format(getSlope(graphArray[0])));
@@ -303,15 +307,13 @@ public class viewScreen extends AppCompatActivity {
     }
 
     private double getStandardError(String graphPoints){
-        double standardError = 0;
-        float mean;
-        double meanSquareRoot;
-        double standardDeviation = 0;
-        float sumForMean = 0;
-        float sumForWhole = 0;
+
         String[] data;
         String[] tempData;
         int numOfPoints;
+
+        SimpleRegression SR = new SimpleRegression();
+
 
         //split data
         data = graphPoints.split("\n");
@@ -320,26 +322,42 @@ public class viewScreen extends AppCompatActivity {
         //loop through and get mean of all points
         for(int i = 0; i < numOfPoints; i++){
             tempData = data[i].split(",");
-            sumForMean += Float.parseFloat(tempData[1]);
+            SR.addData( Double.parseDouble(tempData[0]),  Double.parseDouble(tempData[1]));
         }
-        mean = sumForMean / numOfPoints;
-        //loop through and get sum of (point - mean)^2
+
+        return SR.getSlopeStdErr();
+
+
+    }
+
+    private double getRegressionSlope(String graphPoints){
+
+        String[] data;
+        String[] tempData;
+        int numOfPoints;
+
+        SimpleRegression SR = new SimpleRegression();
+
+
+        //split data
+        data = graphPoints.split("\n");
+        numOfPoints = data.length;
+
+        //loop through and get mean of all points
         for(int i = 0; i < numOfPoints; i++){
             tempData = data[i].split(",");
-            sumForWhole += ((Float.parseFloat(tempData[1]) - mean) * (Float.parseFloat(tempData[1]) - mean));
+            SR.addData( Double.parseDouble(tempData[0]),  Double.parseDouble(tempData[1]));
         }
-        //divide by n graphPoints//get square root
-        standardDeviation = Math.sqrt(sumForWhole/numOfPoints);
-        meanSquareRoot = Math.sqrt(numOfPoints);
-        standardError = standardDeviation/meanSquareRoot;
 
-        return standardError;
+        return SR.getSlope();
+
+
     }
 
     private float getSlope(String graphPoints){
         float slope = 0;
-        float firstMillisecond;
-        float lastMillisecond;
+        float firstSecond;
+        float lastSecond;
         float firstDataPoint;
         float lastDataPoint;
         String[] firstData;
@@ -352,17 +370,15 @@ public class viewScreen extends AppCompatActivity {
         firstData = tempData[0].split(",");
         lastData = tempData[tempData.length - 1].split(",");
 
-        firstMillisecond = Float.parseFloat(firstData[0]);
-        lastMillisecond = Float.parseFloat(lastData[0]);
-        firstMillisecond /= 1000;
-        lastMillisecond /= 1000;
+        firstSecond = Float.parseFloat(firstData[0]);
+        lastSecond = Float.parseFloat(lastData[0]);
 
 
         firstDataPoint = Float.parseFloat(firstData[1]);
         lastDataPoint = Float.parseFloat(lastData[1]);
 
 
-        slope = (lastDataPoint-firstDataPoint)/(lastMillisecond-firstMillisecond);
+        slope = (lastDataPoint-firstDataPoint)/(lastSecond-firstSecond);
 
         return slope;
     }

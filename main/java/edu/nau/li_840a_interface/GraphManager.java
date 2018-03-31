@@ -227,6 +227,14 @@ public class GraphManager implements Runnable
         return lastData;
     }
 
+    public void resetGraphs()
+    {
+        co2Graph.reset();
+        h2oGraph.reset();
+        tempGraph.reset();
+        presGraph.reset();
+    }
+
     /*
      *  Takes in a string of data from the instrument, converts it into a
      *  DataSeries, adds that DataSeries to the log, and updates each
@@ -284,7 +292,8 @@ public class GraphManager implements Runnable
     private class DataSeries
     {
 
-        public long time;
+        //public long time;
+        public float time;
         public float co2;
         public float h2o;
         public float temp;
@@ -302,7 +311,7 @@ public class GraphManager implements Runnable
             float[] parse;
 
             // Save the time the data series was initialized at
-            this.time = time;
+            this.time = time / 1000;
 
             // Get an array of all the parsed values from the data
             parse = parseData(data);

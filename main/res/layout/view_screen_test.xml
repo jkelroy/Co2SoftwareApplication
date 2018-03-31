@@ -95,7 +95,8 @@
                 android:layout_height="match_parent"
                 android:layout_weight="0.25"
                 android:onClick="showCO2"
-                android:text="CO2" />
+                android:text="CO2"
+                android:background = "@android:drawable/btn_default"/>
 
             <Button
                 android:id="@+id/h2obutton"
@@ -103,7 +104,8 @@
                 android:layout_height="match_parent"
                 android:layout_weight="0.25"
                 android:onClick="showH2O"
-                android:text="H20" />
+                android:text="H20"
+                android:background = "@android:drawable/btn_default"/>
 
             <Button
                 android:id="@+id/tempbutton"
@@ -111,7 +113,8 @@
                 android:layout_height="match_parent"
                 android:layout_weight="0.25"
                 android:onClick="showTemp"
-                android:text="Temp" />
+                android:text="Temp"
+                android:background = "@android:drawable/btn_default"/>
 
             <Button
                 android:id="@+id/presbutton"
@@ -119,7 +122,8 @@
                 android:layout_height="match_parent"
                 android:layout_weight="0.25"
                 android:onClick="showPres"
-                android:text="Pressure" />
+                android:text="Pressure"
+                android:background = "@android:drawable/btn_default"/>
 
         </LinearLayout>
 

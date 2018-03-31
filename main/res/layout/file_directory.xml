@@ -16,12 +16,14 @@
         <Button
             android:id="@+id/btn_undoFilter"
             android:text="Undo Filter"
+            android:background = "@android:drawable/btn_default"
             android:layout_width="0dip"
             android:layout_height="match_parent"
             android:layout_weight="0.25"/>
 
         <Button
             android:id="@+id/btn_filter"
+            android:background = "@android:drawable/btn_default"
             android:text="Filter"
             android:layout_width="0dip"
             android:layout_height="match_parent"
@@ -53,11 +55,13 @@
         android:orientation="horizontal">
 
         <Button
+
             android:id="@+id/btn_delete"
             android:text="Delete"
             android:layout_width="0dip"
             android:layout_height="match_parent"
-            android:layout_weight="0.25"/>
+            android:layout_weight="0.25"
+            android:background = "@android:drawable/btn_default"/>
 
         <Button
             android:id="@+id/button5"
@@ -65,21 +69,24 @@
             android:onClick="goHomeScreen"
             android:layout_width="0dip"
             android:layout_height="match_parent"
-            android:layout_weight="0.25"/>
+            android:layout_weight="0.25"
+            android:background = "@android:drawable/btn_default"/>
 
         <Button
             android:id="@+id/btn_view"
             android:text="View"
             android:layout_width="0dip"
             android:layout_height="match_parent"
-            android:layout_weight="0.25"/>
+            android:layout_weight="0.25"
+            android:background = "@android:drawable/btn_default"/>
 
         <Button
             android:id="@+id/btn_email"
             android:text="Email"
             android:layout_width="0dip"
             android:layout_height="match_parent"
-            android:layout_weight="0.25"/>
+            android:layout_weight="0.25"
+            android:background = "@android:drawable/btn_default"/>
 
     </LinearLayout>
 
