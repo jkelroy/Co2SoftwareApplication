@@ -93,7 +93,7 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
 
 
         }
-        Collections.reverse(appFiles);
+      Collections.reverse(appFiles);
 
         // This is the array adapter, it takes the context of the activity as a
         // first parameter, the type of list view as a second parameter and your
@@ -173,7 +173,7 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
                 arrayAdapter.getView(i, view, (ViewGroup)view.getParent());
 
 
-                //DELETE FUNCTIONALITY
+                //DELETE FUNCTIONALITY, ALL HIGHLIGHTED FILES ARE DELETED WHEN BUTTON'S PRESSED
                 btnDel.setOnClickListener(new View.OnClickListener() {
                     int j;
                     int listSize = lv.getCount();
@@ -186,12 +186,11 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
                         for( j = 0; j < listSize; j++){
                             if(lv.isItemChecked(j) == true ) {
 
-                                //list.remove(list.getindexof((list.getstringof(j)))
+
                                 File file = new File(context.getFilesDir(), "M-" + lv.getItemAtPosition(j - count).toString());
                                 File graphFile = new File(context.getFilesDir(), "G-" + lv.getItemAtPosition(j - count).toString());
-                                //File imageFile = new File(context.getFilesDir(), "I" + lv.getItemAtPosition(i).toString().substring(1) + ".bmp");
+
                                 File imageFile = new File(context.getFilesDir(), "I-" + lv.getItemAtPosition(j - count).toString().substring(0, lv.getItemAtPosition(j - count).toString().length() - 4) + ".png");
-                             //   File deleteFile = new File(context.getFilesDir(), lv.getItemAtPosition(j- count).toString());
 
 
 
@@ -249,7 +248,7 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
 
 
         });
-        //SETS BUTTONS AND EDITEXTS
+        //SETS BUTTONS AND EDITEXT OBJECTS
         et_Filter = (EditText) findViewById(R.id.et_filter);
         btnUndo = (Button) findViewById(R.id.btn_undoFilter);
         btnSend = (Button) findViewById(R.id.btn_email);
@@ -257,9 +256,6 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
         btnDel = (Button) findViewById(R.id.btn_delete);
         btnFilter =(Button) findViewById(R.id.btn_filter);
         btnHome = (Button) findViewById(R.id.button5);
-       // btnFilter.setBackgroundResource(android.R.drawable.btn_default);
-       // btnDel.setBackgroundResource(android.R.drawable.btn_default);
-      // btnHome.setBackgroundResource(android.R.drawable.btn_default);
         btnSend.setOnClickListener(this);
         btnView.setOnClickListener(this);
         btnView.setClickable(false);
@@ -271,8 +267,9 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
 
 
 
-        //FILTER, RUNS THE STRING THROUGH THE ARRAY, MESSES WITH THE APPFILES ARRAY, SO DONT LET USER USE BACK
 
+        //Filter functionality. User enters string into text field; when button is pressed
+        //the list is restructured, containing only files with names containing the input
         btnFilter.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -306,7 +303,7 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
 
 
 
-        //Undoes the filter, might be reworked to be the function of everyt other filter button press
+        //Undoes the effect of the filter method, recreating directory list as normal
         btnUndo.setOnClickListener(new View.OnClickListener() {
 
 
@@ -340,9 +337,8 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
     @Override
     public void onClick(View v) {
 
-        //!!!!!!!!!!!!!!!!!!!!!!!
-        //Test stuff for transferring things to view screen, will need code already in final app
-        //!!!!!!!!!!!
+        //When a single file is selected for viewing, this method takes the names of the
+        //files in the selected data set and transfers them into the view screen.
         if (v == btnView) {
 
             Intent viewScreen;
@@ -359,10 +355,6 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
         //All of the email functionality is written in here
         if (v == btnSend) {
             try {
-
-                //
-
-                //makes file and its folder for testing
                 Context context = this;
 
 
@@ -370,23 +362,14 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
 
                         Intent.ACTION_SEND_MULTIPLE);
                 emailIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                // Uri uri = Uri.parse("content://" + fileLocation.getAbsolutePath());
-                //Uri uri = FileProvider.getUriForFile(this, "edu.nau.li_840a_interface", folderfile);
-                //Uri uri2 = FileProvider.getUriForFile(this, "edu.nau.li_840a_interface", fileLocation);
+
                 List<ResolveInfo> resInfoList = context.getPackageManager().queryIntentActivities(emailIntent, PackageManager.MATCH_DEFAULT_ONLY);
                 for (ResolveInfo resolveInfo : resInfoList) {
                     String packageName = resolveInfo.activityInfo.packageName;
                     context.grantUriPermission(packageName, listOfUri.get(0), Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 }
-
-
-
                 emailIntent.setType("text/plain");
-
-                //  emailIntent.putExtra(Intent.EXTRA_STREAM, uri2);
                 emailIntent.putExtra(Intent.EXTRA_STREAM, listOfUri);
-
-
                 if (URI != null) {
                     emailIntent.putExtra(Intent.EXTRA_STREAM, URI);
                 }
@@ -403,7 +386,7 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
 
     }
 
-    //Method that handles making the view button clickable or not, based on how many items are chosen
+    //Method that handles making the buttons clickable or not, based on how many items are chosen
     public void checkFileCount() {
         if (lv.getCheckedItemCount() > 0 && lv.getCheckedItemCount() != 1) {
             btnView.setClickable(false);
@@ -427,20 +410,8 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
         }
 
     }
-    private Bitmap StringToBitMap(String input)
-    {
-        try
-        {
-            byte[] encodedBytes = Base64.decode(input, Base64.DEFAULT);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(encodedBytes, 0, encodedBytes.length);
-            return bitmap;
-        }
-        catch(Exception exception)
-        {
-            return null;
-        }
-    }
 
+    //This is a simple method that is attached  to the home button that takes user to home screen
     public void goHomeScreen(View view)
     {
 

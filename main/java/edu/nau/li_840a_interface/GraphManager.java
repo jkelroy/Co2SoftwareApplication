@@ -39,6 +39,7 @@ public class GraphManager implements Runnable
     private boolean running;
     private boolean logging;
     private String lastData;
+    private GraphView[] graphIds;
 
     ///////////////
     // CONSTANTS //
@@ -85,6 +86,8 @@ public class GraphManager implements Runnable
 
         // Assume we are not logging a subset at the start
         logging = false;
+
+        this.graphIds = graphIds;
 
     }
 
@@ -199,7 +202,7 @@ public class GraphManager implements Runnable
         // Initialize the output string
         output = "";
 
-        output += "Milliseconds,CO2,H2O,Temperature,Pressure\n";
+        output += "Seconds,CO2,H2O,Temperature,Pressure\n";
 
         // Loop through each data series in the data array
         for (DataSeries series : dataArray)
@@ -311,7 +314,7 @@ public class GraphManager implements Runnable
             float[] parse;
 
             // Save the time the data series was initialized at
-            this.time = time / 1000;
+            this.time = (float) time / 1000;
 
             // Get an array of all the parsed values from the data
             parse = parseData(data);

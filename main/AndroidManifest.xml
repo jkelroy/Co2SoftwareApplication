@@ -40,7 +40,8 @@
 
 
         </activity>
-        <activity android:name= ".viewScreen">
+        <activity android:name= ".viewScreen"
+            android:windowSoftInputMode="adjustPan|stateHidden">
 
 
         </activity>

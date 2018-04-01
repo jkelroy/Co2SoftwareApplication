@@ -146,7 +146,7 @@ public class graphScreen extends AppCompatActivity {
             button.setText("Stop Logging");
             finalizeButton.setBackgroundColor(Color.TRANSPARENT);
             finalizeButton.setEnabled(false);
-            //manager.resetGraphs();
+            manager.resetGraphs();
             manager.startlogging();
         }
 

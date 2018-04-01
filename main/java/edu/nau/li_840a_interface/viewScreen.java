@@ -1,6 +1,7 @@
 package edu.nau.li_840a_interface;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -8,6 +9,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -19,6 +21,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +44,8 @@ public class viewScreen extends AppCompatActivity {
     String imageData;
     String GPSString;
     Bitmap metaImage;
+    Double regressionSlope;
+    Double yIntercept;
 
     //graph variables
     private GraphView graphIds[];
@@ -74,9 +79,9 @@ public class viewScreen extends AppCompatActivity {
         TextView timeAndDate = findViewById(R.id.tv_TimeDate);
         TextView fileName = findViewById(R.id.tv_FileName);
         TextView GPS = findViewById(R.id.tv_GPS);
-        TextView slope = findViewById(R.id.slope);
-        TextView standardError = findViewById(R.id.standarderror);
-        TextView rSquared = findViewById(R.id.rsquared);
+        slope = findViewById(R.id.slope);
+        standardError = findViewById(R.id.standarderror);
+        rSquared = findViewById(R.id.rsquared);
 
 
 
@@ -180,6 +185,7 @@ public class viewScreen extends AppCompatActivity {
 
         //get graph info to string array
         graphArray = new String[4];
+
         try
         {
 
@@ -193,6 +199,8 @@ public class viewScreen extends AppCompatActivity {
             rSquared.setText("R Squared : " + df.format(getRSquared(graphArray[0])));
 
         }
+
+
         catch(Exception exception)
         {
             graphArray = new String[4];
@@ -202,6 +210,10 @@ public class viewScreen extends AppCompatActivity {
             graphArray[3] = "";
         }
 
+
+        // get regression and y intercept of co2
+        regressionSlope = getRegressionSlope(graphArray[0]);
+        yIntercept = getYIntercept(graphArray[0]);
 
         // Set up graphs with data
         co2Graph = new LineGraph(graphIds[0], "CO2", "Time", "CO2",
@@ -213,6 +225,8 @@ public class viewScreen extends AppCompatActivity {
         presGraph = new LineGraph(graphIds[3], "Pressure", "Time", "Pressure",
                 Color.argb(100, 0, 255, 0), graphArray[3]);
 
+        //add a regression line to the co2 graph
+        co2Graph.addRegLine(yIntercept, regressionSlope);
 
     }
 
@@ -354,6 +368,30 @@ public class viewScreen extends AppCompatActivity {
 
     }
 
+    private double getYIntercept(String graphPoints){
+
+        String[] data;
+        String[] tempData;
+        int numOfPoints;
+
+        SimpleRegression SR = new SimpleRegression();
+
+
+        //split data
+        data = graphPoints.split("\n");
+        numOfPoints = data.length;
+
+        //loop through and get mean of all points
+        for(int i = 0; i < numOfPoints; i++){
+            tempData = data[i].split(",");
+            SR.addData( Double.parseDouble(tempData[0]),  Double.parseDouble(tempData[1]));
+        }
+
+        return SR.getIntercept();
+
+
+    }
+
     private float getSlope(String graphPoints){
         float slope = 0;
         float firstSecond;
@@ -379,10 +417,12 @@ public class viewScreen extends AppCompatActivity {
 
 
         slope = (lastDataPoint-firstDataPoint)/(lastSecond-firstSecond);
+        System.out.println("TEST SLOPE : "  + slope);
 
         return slope;
     }
 
+    //TODO; for all getstats if graph is null return 0
     private double getRSquared(String graphPoints){
 
         float xTotal = 0;
@@ -428,6 +468,207 @@ public class viewScreen extends AppCompatActivity {
         rSquared  = (rSquared * rSquared);
 
         return rSquared;
+    }
+
+    public void goToFileDirectory(View view)
+    {
+        Intent fileDirectory;
+
+        fileDirectory = new Intent(this, fileDirectory.class);
+
+        startActivity(fileDirectory);
+    }
+
+    public void applySubgraph(View view)
+    {
+
+        EditText splitText;
+        FileOutputStream outStream;
+        String splitTextContent;
+        String newGraph;
+
+        splitText = findViewById(R.id.splitText);
+        splitTextContent = splitText.getText().toString();
+
+        if (!validEntry(splitTextContent, graphData)) {
+            return;
+        }
+        else
+        {
+
+            newGraph = chopString(graphData, splitTextContent.split(",")[0], splitTextContent.split(",")[1]);
+            try
+            {
+                outStream = openFileOutput(getIntent().getStringExtra("GRAPHFILE"), Context.MODE_PRIVATE);
+                outStream.write(newGraph.getBytes());
+                outStream.close();
+            }
+            catch(Exception exception)
+            {
+
+            }
+
+            //get graph info to string array
+            graphArray = new String[4];
+
+            try
+            {
+
+                graphArray = splitGraphData(newGraph);
+
+                //format decimal to be three points
+                DecimalFormat df = new DecimalFormat("#.0000");
+
+                slope.setText("Slope : " + df.format(getSlope(graphArray[0])));
+                standardError.setText("Standard Error : " + df.format(getStandardError(graphArray[0])));
+                rSquared.setText("R Squared : " + df.format(getRSquared(graphArray[0])));
+
+            }
+
+
+            catch(Exception exception)
+            {
+                graphArray = new String[4];
+                graphArray[0] = "";
+                graphArray[1] = "";
+                graphArray[2] = "";
+                graphArray[3] = "";
+            }
+
+
+
+            // get regression and y intercept of co2
+            regressionSlope = getRegressionSlope(graphArray[0]);
+
+            yIntercept = getYIntercept(graphArray[0]);
+
+            // Set up graphs with data
+            co2Graph = new LineGraph(graphIds[0], "CO2", "Time", "CO2",
+                    Color.argb(100, 0, 0, 0), graphArray[0]);
+            h2oGraph = new LineGraph(graphIds[1], "H2O", "Time", "H2O",
+                    Color.argb(100, 0, 0, 255), graphArray[1]);
+            tempGraph = new LineGraph(graphIds[2], "Temperature", "Time", "Temperature",
+                    Color.argb(100, 255, 0, 0), graphArray[2]);
+            presGraph = new LineGraph(graphIds[3], "Pressure", "Time", "Pressure",
+                    Color.argb(100, 0, 255, 0), graphArray[3]);
+
+            //add a regression line to the co2 graph
+            co2Graph.addRegLine(yIntercept, regressionSlope);
+
+        }
+
+    }
+
+    /*
+     * param - graph as a string, starting point, ending point
+     * return - new chopped string
+     * function to cut a string based off a start and end point
+     */
+    static String chopString(String graphPoints, String xStart, String xEnd){
+
+        String[] tempData;
+        String newString = "";
+        int indexOfStart = 1;
+        int indexOfEnd = 1;
+
+
+        //split data
+        tempData = graphPoints.split("\n");
+        float tempSecond = Float.parseFloat(tempData[1].split(",")[0]);
+
+        //loop through points until start is closest to graph starting
+        while ( tempSecond < Float.parseFloat(xStart)){
+            tempSecond = Float.parseFloat(tempData[indexOfStart++].split(",")[0]);
+        }
+
+        if (indexOfStart != 1){
+            indexOfStart -= 1;
+        }
+
+        //set the end to start chekcing where start left off
+        indexOfEnd = indexOfStart;
+
+        //loop through points until end is closest to ending
+        while ( tempSecond < Float.parseFloat(xEnd)){
+            tempSecond = Float.parseFloat(tempData[indexOfEnd++].split(",")[0]);
+
+        }
+
+
+
+        indexOfEnd -= 1;
+
+        newString += tempData[0] + "\n";
+
+
+        //loop through array and create string
+        for(int i = indexOfStart; i < indexOfEnd; i++ ){
+            newString += tempData[i] + "\n";
+        }
+
+        return newString;
+    }
+
+    /*
+     * param - csv start and end for graph ie x,y
+     * return - true if valid entry false otherwise
+     * function to check if xstart and xend is a valid entry
+     */
+    static boolean validEntry(String xStartAndEnd, String graphString){
+
+        double firstSecond = 0.0;
+        double lastSecond = 0.0;
+        double xStartInt = 0.0;
+        double xEndInt = 0.0;
+        String xStart = "";
+        String xEnd = "";
+        String[] firstData;
+        String[] lastData;
+        String[] tempData;
+
+        //split graph data
+        tempData = graphString.split("\n");
+
+        //get first and last points in array of graph
+        firstData = tempData[1].split(",");
+        lastData = tempData[tempData.length - 1].split(",");
+
+        //get first and last second of graph
+        firstSecond = Double.parseDouble(firstData[0]);
+        lastSecond = Double.parseDouble(lastData[0]);
+
+        // if null or not csv
+        if (xStartAndEnd == ""){
+            return false;
+        }
+        if (!xStartAndEnd.contains(",")){
+            return false;
+        }
+
+        //get strings of ints
+        xStart = xStartAndEnd.split(",")[0];
+        xEnd = xStartAndEnd.split(",")[1];
+
+        //if not all numbers
+        if (!xStart.matches("[0-9]+") || !xEnd.matches("[0-9]+")){
+            return false;
+        }
+
+        //get ints of strings
+        xStartInt = Float.parseFloat(xStart);
+        xEndInt = Float.parseFloat(xEnd);
+
+        //if out of range or equal
+        if (xStartInt < 0  || xStartInt > xEndInt || xStartInt == xEndInt){
+            return false;
+        }
+
+        //if out of graph string range
+        if (xStartInt < firstSecond || xEndInt > lastSecond){
+            return false;
+        }
+
+        return true;
     }
 
 }

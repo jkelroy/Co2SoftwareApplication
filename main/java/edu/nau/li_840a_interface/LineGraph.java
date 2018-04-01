@@ -13,6 +13,7 @@ import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
+import com.jjoe64.graphview.series.PointsGraphSeries;
 
 public class LineGraph
 {
@@ -21,9 +22,10 @@ public class LineGraph
     // Class Member Variables //
     ////////////////////////////
     private GraphView graph;
-    private LineGraphSeries series;
+    private PointsGraphSeries series;
     private int numPoints;
     private String graphType;
+    private int color;
 
     ///////////////
     // Constants //
@@ -54,12 +56,11 @@ public class LineGraph
         gridLabel.setLabelVerticalWidth(30);
 
         // Initialize a new series of data points
-        series = new LineGraphSeries<>(new DataPoint[] {});
+        series = new PointsGraphSeries<>(new DataPoint[] {});
 
         // Assign the graph colors
-        series.setDrawBackground(true);
         series.setColor(color);
-        series.setBackgroundColor(color);
+        series.setSize(5);
         graph.setTitleColor(color);
 
         // Assign the new empty series to the graph
@@ -110,12 +111,11 @@ public class LineGraph
         gridLabel.setVerticalAxisTitle(yAxis);
 
         // Initialize a new series of data points
-        series = new LineGraphSeries<>(new DataPoint[] {});
+        series = new PointsGraphSeries<>(new DataPoint[] {});
 
         // Assign the graph colors
-        series.setDrawBackground(true);
         series.setColor(color);
-        series.setBackgroundColor(color);
+        series.setSize(5);
         graph.setTitleColor(color);
 
         // Make sure a data set was recorded before attempting to parse values
@@ -159,6 +159,9 @@ public class LineGraph
         // Specify that the graph is stats, and cannot have points dynamically added to it
         graphType = "static";
 
+        // Save the color so that it can be used in the regression line
+        this.color = color;
+
     }
 
     /*
@@ -196,10 +199,37 @@ public class LineGraph
 
     public void reset()
     {
-        //series = new LineGraphSeries<>(new DataPoint[] {});
-        //graph.addSeries(series);
+        series.resetData(new DataPoint[] {});
+        numPoints = 0;
 
     }
+
+    public void addRegLine(double yIntercept, double slope)
+    {
+
+        double xStart;
+        double xEnd;
+        double yStart;
+        double yEnd;
+        LineGraphSeries regSeries;
+
+        xStart = series.getLowestValueX();
+        xEnd = series.getHighestValueX();
+
+        yStart = (slope * xStart) + yIntercept;
+        yEnd = (slope * xEnd) + yIntercept;
+
+        regSeries = new LineGraphSeries<>(new DataPoint[] {});
+        regSeries.setColor(color);
+        regSeries.setThickness(3);
+
+        regSeries.appendData(new DataPoint(xStart, yStart), false, MAX_DATA_POINTS);
+        regSeries.appendData(new DataPoint(yStart, yEnd), false, MAX_DATA_POINTS);
+
+        graph.addSeries(regSeries);
+
+    }
+
 }
 
 

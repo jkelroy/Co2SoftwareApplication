@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="edu.nau.li_840a_interface.graphScreen"
+    tools:context="edu.nau.li_840a_interface.viewScreen"
     android:orientation="vertical">
 
     <!-- File name -->
@@ -19,7 +19,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dip"
-        android:layout_weight="0.4"
+        android:layout_weight="0.35"
         android:orientation="vertical">
 
         <com.jjoe64.graphview.GraphView
@@ -76,64 +76,11 @@
 
     </LinearLayout>
 
-    <!-- Buttons -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dip"
-        android:layout_weight="0.1"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dip"
-            android:layout_weight="0.2"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/co2button"
-                android:layout_width="0dip"
-                android:layout_height="match_parent"
-                android:layout_weight="0.25"
-                android:onClick="showCO2"
-                android:text="CO2"
-                android:background = "@android:drawable/btn_default"/>
-
-            <Button
-                android:id="@+id/h2obutton"
-                android:layout_width="0dip"
-                android:layout_height="match_parent"
-                android:layout_weight="0.25"
-                android:onClick="showH2O"
-                android:text="H20"
-                android:background = "@android:drawable/btn_default"/>
-
-            <Button
-                android:id="@+id/tempbutton"
-                android:layout_width="0dip"
-                android:layout_height="match_parent"
-                android:layout_weight="0.25"
-                android:onClick="showTemp"
-                android:text="Temp"
-                android:background = "@android:drawable/btn_default"/>
-
-            <Button
-                android:id="@+id/presbutton"
-                android:layout_width="0dip"
-                android:layout_height="match_parent"
-                android:layout_weight="0.25"
-                android:onClick="showPres"
-                android:text="Pressure"
-                android:background = "@android:drawable/btn_default"/>
-
-        </LinearLayout>
-
-    </LinearLayout>
-
     <!-- Metadata -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dip"
-        android:layout_weight="0.4"
+        android:layout_weight="0.35"
         android:orientation="horizontal">
 
         <LinearLayout
@@ -206,6 +153,93 @@
                 />
 
         </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dip"
+        android:layout_weight="0.1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dip"
+            android:layout_weight="0.2"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/co2button"
+                android:layout_width="0dip"
+                android:layout_height="match_parent"
+                android:layout_weight="0.25"
+                android:onClick="showCO2"
+                android:text="CO2"
+                android:background = "@android:drawable/btn_default"/>
+
+            <Button
+                android:id="@+id/h2obutton"
+                android:layout_width="0dip"
+                android:layout_height="match_parent"
+                android:layout_weight="0.25"
+                android:onClick="showH2O"
+                android:text="H20"
+                android:background = "@android:drawable/btn_default"/>
+
+            <Button
+                android:id="@+id/tempbutton"
+                android:layout_width="0dip"
+                android:layout_height="match_parent"
+                android:layout_weight="0.25"
+                android:onClick="showTemp"
+                android:text="Temp"
+                android:background = "@android:drawable/btn_default"/>
+
+            <Button
+                android:id="@+id/presbutton"
+                android:layout_width="0dip"
+                android:layout_height="match_parent"
+                android:layout_weight="0.25"
+                android:onClick="showPres"
+                android:text="Pressure"
+                android:background = "@android:drawable/btn_default"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dip"
+        android:layout_weight="0.1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/fileDirectoryButton"
+            android:layout_width="0dip"
+            android:layout_height="match_parent"
+            android:layout_weight="0.33"
+            android:onClick="goToFileDirectory"
+            android:text="Back"
+            android:background = "@android:drawable/btn_default"/>
+
+        <Button
+            android:id="@+id/splitButton"
+            android:layout_width="0dip"
+            android:layout_height="match_parent"
+            android:layout_weight="0.33"
+            android:onClick="applySubgraph"
+            android:text="Apply Subgraph"
+            android:background = "@android:drawable/btn_default"/>
+
+        <EditText
+            android:id="@+id/splitText"
+            android:layout_width="0dip"
+            android:layout_height="match_parent"
+            android:layout_weight="0.33"
+            android:singleLine="true"
+            android:hint="Start,end"/>
 
     </LinearLayout>
 
