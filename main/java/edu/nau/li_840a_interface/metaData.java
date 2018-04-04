@@ -9,12 +9,15 @@
 package edu.nau.li_840a_interface;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.Build;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -28,6 +31,9 @@ import android.support.annotation.Nullable;
 import android.widget.Button;
 import android.widget.TextView;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import android.widget.*;
 import java.text.SimpleDateFormat;
@@ -35,19 +41,32 @@ import java.util.Date;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+
 
 public class metaData extends AppCompatActivity {
 
+    // Camera Variables
     ImageButton cameraB;
-    private Bitmap image;
+    private static final int REQUEST_CODE = 1;
+    public Bitmap image;
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+    private ImageView imagePreview;
+
+    // Time/Date Variables
     private String currentDateTimeString;
     private String currentDateTimeFormatted;
-    private static final int CAMERA_PIC_REQUEST = 2500;
 
+    //GPS Variables
     private Button GPS_b;
-    private TextView GPS_tv;
+    private EditText et_GPSLong;
+    private EditText et_GPSLat;
+    private EditText et_Elevation;
     private LocationManager locationManager;
     private LocationListener listener;
+
 
     // Text Watcher Handles Field Validation, checks after the Text has been changed, Raises Toast
     private TextWatcher textWatcher = new TextWatcher() {
@@ -66,18 +85,18 @@ public class metaData extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
 
-        Date currentDate = new Date();
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.meta_data);
 
         // Instance Variables by ID
+        Date currentDate = new Date();
         EditText siteName = (EditText) findViewById(R.id.et_SN);
-        EditText operatorName = (EditText) findViewById(R.id.et_ON);
+        AutoCompleteTextView operatorName = (AutoCompleteTextView) findViewById(R.id.et_ON);
         EditText sampleID = (EditText) findViewById(R.id.et_SID);
         EditText temperature = (EditText) findViewById(R.id.et_Temp);
         EditText comments = (EditText) findViewById(R.id.et_Com);
-
+        imagePreview = findViewById(R.id.imageView);
 
         // Initiates field Validation, Disables "Finish" button on Screen Creation
         operatorName.addTextChangedListener(textWatcher);
@@ -85,6 +104,14 @@ public class metaData extends AppCompatActivity {
         sampleID.addTextChangedListener(textWatcher);
         checkFieldsForEmptyValues();
 
+
+        // AutoFill
+        // Get a reference to the AutoCompleteTextView in the layout
+        // Get the string array
+        String[] names = getResources().getStringArray(R.array.names_array);
+        // Create the adapter and set it to the AutoCompleteTextView
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, names);
+        operatorName.setAdapter(adapter);
 
         //***Time and Date***
         TextView tv_Date;
@@ -105,18 +132,14 @@ public class metaData extends AppCompatActivity {
         //***Camera***
 
         ImageButton imageB = (ImageButton) findViewById(R.id.cameraB);
-        imageB.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-
-                startActivityForResult(cameraIntent, CAMERA_PIC_REQUEST);
-            }
-        });
 
 
         //***GPS***
 
-        GPS_tv = (TextView) findViewById(R.id.tv_GPS);
+        et_GPSLong =  findViewById(R.id.et_GPSLong);
+        et_GPSLat =  findViewById(R.id.et_GPSLat);
+        et_Elevation =  findViewById(R.id.et_Elevation);
+
         GPS_b = (Button) findViewById(R.id.GPSbutton);
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -125,7 +148,9 @@ public class metaData extends AppCompatActivity {
         listener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                GPS_tv.setText("Longitude: " + location.getLongitude() + "; Latitude: " + location.getLatitude());
+                et_GPSLong.setText(""+ location.getLongitude());
+                et_GPSLat.setText("" + location.getLatitude());
+                et_Elevation.setText("" + location.getAltitude());
             }
 
             @Override
@@ -148,6 +173,8 @@ public class metaData extends AppCompatActivity {
         configure_button();
         // Initiates GPS Search on Create.
         GPS_b.performClick();
+
+
     }
 
     // Requesting Permissions for GPS
@@ -179,23 +206,30 @@ public class metaData extends AppCompatActivity {
                 // IGNORE THIS ERROR.  App still runs, Android Studio thinks I am not checking permissions,
                 // but in reality I am Checking Permissions in the if statement above
                 // (noinspection MissingPermission)
-                locationManager.requestLocationUpdates("gps", 5000, 0, listener);
+                locationManager.requestLocationUpdates("gps", 30000, 0, listener);
             }
         });
     }
 
 
-    // Helper Function for Camera Functionality
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode != CAMERA_PIC_REQUEST){
-
-        }
-        else {
-            image = (Bitmap) data.getExtras().get("data"); //If the user hits the back button when Camera is open, data will be NULL and the app will crash
-            ImageView imageview = (ImageView) findViewById(R.id.ImageView01);
-            imageview.setImageBitmap(image);
+    //***Camera***
+    public void dispatchTakePictureIntent(View view) {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            image = (Bitmap) data.getExtras().get("data");
+            imagePreview.setImageBitmap(imageBitmap);
+        }
+    }
+
 
     //***Field Validation***
 
@@ -234,7 +268,6 @@ public class metaData extends AppCompatActivity {
         }
     }
 
-    // Helper Function for Camera Functionality
     public String BitMapToString(Bitmap bitmap){
         ByteArrayOutputStream baos=new  ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG,100, baos);
@@ -243,6 +276,12 @@ public class metaData extends AppCompatActivity {
         return temp;
     }
 
+    // Disables Back Button
+    @Override
+    public void onBackPressed()
+    {
+
+    }
 
 
     // "FINISH" Button, goes to the next screen to start a new data set
@@ -254,7 +293,9 @@ public class metaData extends AppCompatActivity {
         EditText sampleID = (EditText) findViewById(R.id.et_SID);
         EditText temperature = (EditText) findViewById(R.id.et_Temp);
         EditText comments = (EditText) findViewById(R.id.et_Com);
-        TextView gps =  findViewById(R.id.tv_GPS);
+        EditText longitude = findViewById(R.id.et_GPSLong);
+        EditText latitude = findViewById(R.id.et_GPSLat);
+        EditText elevation = findViewById(R.id.et_Elevation);
 
 
         String site = siteName.getText().toString();
@@ -262,10 +303,11 @@ public class metaData extends AppCompatActivity {
         String sampleid = sampleID.getText().toString();
         String temp = temperature.getText().toString();
         String commentS = comments.getText().toString();
-        String gpsString = gps.getText().toString();
+        String longitudeS = longitude.getText().toString();
+        String latitudeS = latitude.getText().toString();
+        String elevationS = elevation.getText().toString();
 
 
-        // Will probably delete this when the Camera is re worked
         String imageString = "NA";
         try
         {
@@ -285,11 +327,25 @@ public class metaData extends AppCompatActivity {
         graphScreen.putExtra("SAMPLE_ID", sampleid);
         graphScreen.putExtra("TEMPERATURE", temp);
         graphScreen.putExtra("COMMENTS", commentS );
-        graphScreen.putExtra("IMAGE", imageString);
+        graphScreen.putExtra("IMAGE", imageString );
         graphScreen.putExtra("TIME", currentDateTimeFormatted);
-        graphScreen.putExtra("GPS", gpsString);
+        graphScreen.putExtra("GPSLong", longitudeS);
+        graphScreen.putExtra("GPSLat", latitudeS);
+        graphScreen.putExtra("ELEVATION", elevationS);
+
 
         startActivity(graphScreen);
+
+    }
+
+    public void goHomeScreen(View view)
+    {
+
+        Intent homeScreen;
+
+        homeScreen = new Intent(this, homeScreen.class);
+
+        startActivity(homeScreen);
 
     }
 

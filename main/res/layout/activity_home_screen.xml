@@ -11,15 +11,16 @@
         android:layout_width="match_parent"
         android:layout_height="0dip"
         android:layout_weight="0.2"
-        android:text="CO2 Flux"
         android:gravity="center"
-        android:textSize="50pt"/>
+        android:text="CO2 Flux"
+        android:textSize="30sp" />
 
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="0dip"
+        android:layout_height="0dp"
         android:layout_weight="0.4"
-        app:srcCompat="@drawable/co2_fluxlogo2"/>
+        android:paddingVertical="@android:dimen/app_icon_size"
+        app:srcCompat="@drawable/co2_fluxlogo2" />
 
     <Button
         android:layout_width="match_parent"

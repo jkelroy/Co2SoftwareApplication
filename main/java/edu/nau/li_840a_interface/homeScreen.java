@@ -41,4 +41,10 @@ public class homeScreen extends AppCompatActivity {
         startActivity(fileDirectory);
 
     }
+
+    @Override
+    public void onBackPressed()
+    {
+
+    }
 }

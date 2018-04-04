@@ -8,6 +8,17 @@
     <string name="operator_name">Operator Name:</string>
     <string name="site_name">Site Name:</string>
     <string name="plot_number">Plot Number:</string>
-    <string name="tempurature">Tempurature:</string>
+    <string name="tempurature">Temperature:</string>
     <string name="todo">todo</string>
+    <string name="required">Required</string>
+
+    <string-array name="names_array">
+        <item>Andrew Richardson</item>
+        <item>Mariah Carbone</item>
+        <item>Tim Rademacher</item>
+        <item>Jimmy Beasely</item>
+        <item>Andrew Greene</item>
+        <item>Samuel Beals</item>
+        <item>Joseph Kelroy</item>
+    </string-array>
 </resources>

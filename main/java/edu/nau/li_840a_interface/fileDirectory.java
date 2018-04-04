@@ -422,4 +422,10 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
         startActivity(homeScreen);
 
     }
+
+    @Override
+    public void onBackPressed()
+    {
+
+    }
 }

@@ -154,8 +154,11 @@ public class graphScreen extends AppCompatActivity {
         else
         {
             button.setText("Start Logging");
-            finalizeButton.setBackgroundResource(android.R.drawable.btn_default);
-            finalizeButton.setEnabled(true);
+            if (!manager.isEmpty())
+            {
+                finalizeButton.setBackgroundResource(android.R.drawable.btn_default);
+                finalizeButton.setEnabled(true);
+            }
             manager.stoplogging();
         }
 
@@ -173,7 +176,9 @@ public class graphScreen extends AppCompatActivity {
         String metaComments;
         String metaTime;
         String metaString;
-        String metaGPS;
+        String metaLong;
+        String metaLat;
+        String metaElevation;
         String imageString;
         String fileName;
 
@@ -188,14 +193,16 @@ public class graphScreen extends AppCompatActivity {
         metaTemp = getIntent().getStringExtra("TEMPERATURE");
         metaComments = getIntent().getStringExtra("COMMENTS");
         metaTime = getIntent().getStringExtra("TIME");
-        metaGPS = getIntent().getStringExtra("GPS");
+        metaLong = getIntent().getStringExtra("GPSLong");
+        metaLat = getIntent().getStringExtra("GPSLat");
+        metaElevation = getIntent().getStringExtra("ELEVATION");
         imageString = getIntent().getStringExtra("IMAGE");
 
 
         // Construct the CSV file content
         metaString = "Operator Name,Site Name,Sample ID,Temperature,Comments,Time and Date,GPS\n" +
                      metaOpName + "," + metaSite + "," + metaSampleId + "," + metaTemp + "," +
-                     metaComments + "," + metaTime + "," + metaGPS;
+                     metaComments + "," + metaTime + "," + metaLong + "," + metaLat + "," + metaElevation;
 
 
         manager.stoplogging();
@@ -223,7 +230,7 @@ public class graphScreen extends AppCompatActivity {
             if (!imageString.equals("NA"))
             {
                 outStream = openFileOutput("I-" + fileName + ".png", Context.MODE_APPEND);
-                stringToBitMap(imageString).compress(Bitmap.CompressFormat.PNG, 100, outStream);
+                stringToBitMap(imageString).compress(Bitmap.CompressFormat.PNG, 70, outStream);
                 outStream.close();
             }
 
@@ -411,6 +418,12 @@ public class graphScreen extends AppCompatActivity {
             }
 
         }
+
+    }
+
+    @Override
+    public void onBackPressed()
+    {
 
     }
 

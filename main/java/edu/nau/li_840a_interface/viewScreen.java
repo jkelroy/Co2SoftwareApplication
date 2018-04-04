@@ -29,9 +29,6 @@ import java.io.InputStreamReader;
 import java.lang.String;
 import java.text.DecimalFormat;
 
-/**
- * Created by Andrew on 2/6/2018.
- */
 
 public class viewScreen extends AppCompatActivity {
 
@@ -42,7 +39,9 @@ public class viewScreen extends AppCompatActivity {
     String graphData;
     String imageFile;
     String imageData;
-    String GPSString;
+    String Longitude;
+    String Latitude;
+    String Elevation;
     Bitmap metaImage;
     Double regressionSlope;
     Double yIntercept;
@@ -66,7 +65,7 @@ public class viewScreen extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         final Context context = this;
-        metaDataArray = new String[6];
+        metaDataArray = new String[9];
 
         //set up UI
         super.onCreate(savedInstanceState);
@@ -78,7 +77,12 @@ public class viewScreen extends AppCompatActivity {
         TextView comments = findViewById(R.id.tv_Comments);
         TextView timeAndDate = findViewById(R.id.tv_TimeDate);
         TextView fileName = findViewById(R.id.tv_FileName);
-        TextView GPS = findViewById(R.id.tv_GPS);
+        TextView longitude = findViewById(R.id.tv_long);
+        TextView latitude = findViewById(R.id.tv_lat);
+        TextView elevation = findViewById(R.id.tv_elev);
+
+
+
         slope = findViewById(R.id.slope);
         standardError = findViewById(R.id.standarderror);
         rSquared = findViewById(R.id.rsquared);
@@ -154,7 +158,10 @@ public class viewScreen extends AppCompatActivity {
             temperature.setText(null);
             comments.setText(null);
             timeAndDate.setText(null);
-            GPS.setText(null);
+            longitude.setText(null);
+            latitude.setText(null);
+            elevation.setText(null);
+
 
         }
 
@@ -180,7 +187,17 @@ public class viewScreen extends AppCompatActivity {
         temperature.setText("Temperature : " + metaDataArray[3]);
         comments.setText("Comments : " + metaDataArray[4]);
         timeAndDate.setText("Time and Date : " + metaDataArray[5]);
-        GPS.setText("GPS : " + metaDataArray[6]);
+
+        try {
+            longitude.setText("Longitude : " + metaDataArray[6]);
+            latitude.setText("Latitude : " + metaDataArray[7]);
+            elevation.setText("Elevation : " + metaDataArray[8]);
+        } catch(Exception exception){
+            longitude.setText("Longitude : Null");
+            latitude.setText("Latitude : Null" );
+            elevation.setText("Elevation : Null");
+        }
+
 
 
         //get graph info to string array
@@ -326,6 +343,10 @@ public class viewScreen extends AppCompatActivity {
         String[] tempData;
         int numOfPoints;
 
+        if (graphPoints == ""){
+            return 0;
+        }
+
         SimpleRegression SR = new SimpleRegression();
 
 
@@ -350,6 +371,10 @@ public class viewScreen extends AppCompatActivity {
         String[] tempData;
         int numOfPoints;
 
+        if (graphPoints == ""){
+            return 0;
+        }
+
         SimpleRegression SR = new SimpleRegression();
 
 
@@ -373,6 +398,10 @@ public class viewScreen extends AppCompatActivity {
         String[] data;
         String[] tempData;
         int numOfPoints;
+
+        if (graphPoints == ""){
+            return 0;
+        }
 
         SimpleRegression SR = new SimpleRegression();
 
@@ -401,6 +430,10 @@ public class viewScreen extends AppCompatActivity {
         String[] firstData;
         String[] lastData;
         String[] tempData;
+
+        if (graphPoints == ""){
+            return 0;
+        }
 
         //split data
         tempData = graphPoints.split("\n");
@@ -436,6 +469,10 @@ public class viewScreen extends AppCompatActivity {
         int numOfPoints;
         float tempX;
         float tempY;
+
+        if (graphPoints == ""){
+            return 0;
+        }
 
         //split data
         data = graphPoints.split("\n");
@@ -669,6 +706,12 @@ public class viewScreen extends AppCompatActivity {
         }
 
         return true;
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+
     }
 
 }
