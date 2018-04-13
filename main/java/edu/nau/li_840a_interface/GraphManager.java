@@ -161,7 +161,7 @@ public class GraphManager implements Runnable
     public void startlogging()
     {
 
-        Date time;
+        //Date time;
 
         // Clear the log of any previously saved data points
         dataArray = new ArrayList<DataSeries>();
@@ -171,10 +171,10 @@ public class GraphManager implements Runnable
         logging = true;
 
         // Reset the time
-        time = new Date();
-        startTime = time.getTime();
+        //time = new Date();
+       // startTime = time.getTime();
 
-        resetGraphs();
+        //resetGraphs();
 
     }
 

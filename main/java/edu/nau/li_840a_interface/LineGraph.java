@@ -104,6 +104,11 @@ public class LineGraph
         String[] points;
         float time;
         float value;
+        double lowest;
+        double highest;
+        double difference;
+        double min;
+        double max;
 
         // Assign the graph to an interface ID
         graph = id;
@@ -155,8 +160,18 @@ public class LineGraph
             graph.addSeries(series);
 
             // Set the Y axis range
-            graph.getViewport().setMaxY(series.getHighestValueY() * TOP_BUFF);
-            graph.getViewport().setMinY(series.getLowestValueY() * BOTTOM_BUFF);
+            lowest = series.getLowestValueY();
+            highest = series.getHighestValueY();
+            difference = highest - lowest;
+            min = lowest - (difference / 2);
+            if (min < 0)
+            {
+                min = 0;
+            }
+            max = highest + (difference / 2);
+
+            graph.getViewport().setMaxY(max);
+            graph.getViewport().setMinY(min);
 
             // Set the X axis range
             graph.getViewport().setMaxX(series.getHighestValueX());
@@ -186,6 +201,12 @@ public class LineGraph
     public void addPoint(float value, float time)
     {
 
+        double lowest;
+        double highest;
+        double difference;
+        double max;
+        double min;
+
         // If the graph is static, and not dynamic, do not add the point
         if (graphType.equals("static"))
         {
@@ -197,6 +218,10 @@ public class LineGraph
 
         // Increment the total number of points
         numPoints++;
+
+        lowest = series.getLowestValueY();
+        highest = series.getHighestValueY();
+        difference = highest - lowest;
 
         // Only execute the following code if the graph is not currently zoomable
         if (!zoomable)
@@ -211,8 +236,17 @@ public class LineGraph
 
             // Scale the viewport to a little more than the highest Y value, and a little less than
             // the lowest y value
-            graph.getViewport().setMaxY(series.getHighestValueY() * TOP_BUFF);
-            graph.getViewport().setMinY(series.getLowestValueY() * BOTTOM_BUFF);
+            max = highest + (difference / 2);
+
+            min = lowest - (difference / 2);
+
+            if (min < 0)
+            {
+                min = 0;
+            }
+
+            graph.getViewport().setMinY(min);
+            graph.getViewport().setMaxY(max);
 
             // Update the viewport to show the new maximum time
             graph.getViewport().setMaxX(time);

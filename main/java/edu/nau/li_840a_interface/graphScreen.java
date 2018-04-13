@@ -268,17 +268,16 @@ public class graphScreen extends AppCompatActivity {
         DecimalFormat df = new DecimalFormat("#.0000");
 
         // Calculate each of the stats
-        slope = df.format(getSlope(graphArray[0]));
         rSquared = df.format(getRSquared(graphArray[0]));
         stdError = df.format(getStandardError(graphArray[0]));
         regSlope = df.format(getRegressionSlope(graphArray[0]));
 
         // Construct the CSV file content
         metaString = "Operator Name,Site Name,Sample ID,Temperature,Comments,Time and Date,Longitude," +
-                     "Latitude,Elevation,Slope,R Squared,Standard Error,Regression Slope\n" +
+                     "Latitude,Elevation,R Squared,Regression Slope,Standard Error\n" +
                      metaOpName + "," + metaSite + "," + metaSampleId + "," + metaTemp + "," +
                      metaComments + "," + metaTime + "," + metaLong + "," + metaLat + "," +
-                     metaElevation + "," + slope + "," + rSquared + "," + stdError + "," + regSlope;
+                     metaElevation + "," + rSquared + "," + regSlope + "," + stdError;
 
 
         // Build the file name using the site name, sample id, and time stamp
@@ -650,40 +649,6 @@ public class graphScreen extends AppCompatActivity {
         return SR.getIntercept();
 
 
-    }
-
-    private float getSlope(String graphPoints){
-        float slope = 0;
-        float firstSecond;
-        float lastSecond;
-        float firstDataPoint;
-        float lastDataPoint;
-        String[] firstData;
-        String[] lastData;
-        String[] tempData;
-
-        if (graphPoints == ""){
-            return 0;
-        }
-
-        //split data
-        tempData = graphPoints.split("\n");
-
-        firstData = tempData[0].split(",");
-        lastData = tempData[tempData.length - 1].split(",");
-
-        firstSecond = Float.parseFloat(firstData[0]);
-        lastSecond = Float.parseFloat(lastData[0]);
-
-
-        firstDataPoint = Float.parseFloat(firstData[1]);
-        lastDataPoint = Float.parseFloat(lastData[1]);
-
-
-        slope = (lastDataPoint-firstDataPoint)/(lastSecond-firstSecond);
-        System.out.println("TEST SLOPE : "  + slope);
-
-        return slope;
     }
 
     private double getRSquared(String graphPoints){

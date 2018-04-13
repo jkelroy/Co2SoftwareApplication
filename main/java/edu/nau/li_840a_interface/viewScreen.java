@@ -38,6 +38,8 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static java.lang.Double.NaN;
+
 
 public class viewScreen extends AppCompatActivity {
 
@@ -147,33 +149,22 @@ public class viewScreen extends AppCompatActivity {
 
             }
 
-            imageFile = getIntent().getStringExtra("IMAGE");
-            inputStream = openFileInput(imageFile);
-            inputReader = new InputStreamReader(inputStream);
-            buffReader = new BufferedReader(inputReader);
-            imageData = "";
-            line = buffReader.readLine();
-            while(line != null)
-            {
-                imageData += line;
+            if (!metaFile.contains("_subgraph_")) {
+                imageFile = getIntent().getStringExtra("IMAGE");
+                inputStream = openFileInput(imageFile);
+                inputReader = new InputStreamReader(inputStream);
+                buffReader = new BufferedReader(inputReader);
+                imageData = "";
                 line = buffReader.readLine();
+                while (line != null) {
+                    imageData += line;
+                    line = buffReader.readLine();
+                }
             }
-        /*
-            int my_char;
-            my_char = buffReader.read();
-            while(my_char != -1)
-            {
-                imageData += (char) my_char;
-                my_char = buffReader.read();
+            else{
+                imageFile = getIntent().getStringExtra("IMAGE");
+                imageFile = imageFile.split("_subgraph_")[0] + ".png";
             }
-
-            static String readFile(String path, Charset encoding)
-  throws IOException
-{
-  byte[] encoded = Files.readAllBytes(Paths.get(path));
-  return new String(encoded, encoding);
-}
-*/
 
         //return error and null for all data if it cannot open
         } catch (Exception e) {
@@ -192,8 +183,7 @@ public class viewScreen extends AppCompatActivity {
 
 
         }
-            System.out.println("TEST: Image file name in: " + imageFile);
-            System.out.println("TEST: Image file content in: " + imageData);
+        //if subgraph dont reread just put in
         try
         {
             FileInputStream stream = openFileInput(imageFile);
@@ -232,7 +222,7 @@ public class viewScreen extends AppCompatActivity {
             //format decimal to be three points
             DecimalFormat df = new DecimalFormat("#.0000");
 
-            slope.setText("Slope : " + df.format(getSlope(graphArray[0])));
+            slope.setText("Slope : " + df.format(getRegressionSlope(graphArray[0])));
             standardError.setText("Standard Error : " + df.format(getStandardError(graphArray[0])));
             rSquared.setText("R Squared : " + df.format(getRSquared(graphArray[0])));
 
@@ -364,6 +354,7 @@ public class viewScreen extends AppCompatActivity {
 
     }
 
+    //TODO: for nan make sure decmil format handles it correctly
     private double getStandardError(String graphPoints){
 
         String[] data;
@@ -380,6 +371,11 @@ public class viewScreen extends AppCompatActivity {
         //split data
         data = graphPoints.split("\n");
         numOfPoints = data.length;
+
+        //Dr Richardson wanted this if there are not at least 5 points
+        if (numOfPoints < 5) {
+            return NaN;
+        }
 
         //loop through and get mean of all points
         for(int i = 0; i < numOfPoints; i++){
@@ -437,6 +433,7 @@ public class viewScreen extends AppCompatActivity {
         data = graphPoints.split("\n");
         numOfPoints = data.length;
 
+
         //loop through and get mean of all points
         for(int i = 0; i < numOfPoints; i++){
             tempData = data[i].split(",");
@@ -446,39 +443,6 @@ public class viewScreen extends AppCompatActivity {
         return SR.getIntercept();
 
 
-    }
-
-    private float getSlope(String graphPoints){
-        float slope = 0;
-        float firstSecond;
-        float lastSecond;
-        float firstDataPoint;
-        float lastDataPoint;
-        String[] firstData;
-        String[] lastData;
-        String[] tempData;
-
-        if (graphPoints == ""){
-            return 0;
-        }
-
-        //split data
-        tempData = graphPoints.split("\n");
-
-        firstData = tempData[0].split(",");
-        lastData = tempData[tempData.length - 1].split(",");
-
-        firstSecond = Float.parseFloat(firstData[0]);
-        lastSecond = Float.parseFloat(lastData[0]);
-
-
-        firstDataPoint = Float.parseFloat(firstData[1]);
-        lastDataPoint = Float.parseFloat(lastData[1]);
-
-
-        slope = (lastDataPoint-firstDataPoint)/(lastSecond-firstSecond);
-
-        return slope;
     }
 
     private double getRSquared(String graphPoints){
@@ -502,6 +466,11 @@ public class viewScreen extends AppCompatActivity {
         //split data
         data = graphPoints.split("\n");
         numOfPoints = data.length;
+
+        //Dr Richardson wanted this if there are not at least 5 points
+        if (numOfPoints < 5) {
+            return NaN;
+        }
 
         //loop through and get xtotal and ytotal and their squares
         for(int i = 0; i < numOfPoints; i++){
@@ -585,9 +554,6 @@ public class viewScreen extends AppCompatActivity {
         newImageFileName = "I-" + newFileName.replace(".csv", ".png");
 
 
-        System.out.println("TEST: Image file name out: " + newImageFileName);
-        System.out.println("TEST: Image file content out: " + newImage);
-
         // Write the new subsection to the graph file
         try
         {
@@ -608,7 +574,7 @@ public class viewScreen extends AppCompatActivity {
         }
         catch(Exception exception)
         {
-            System.out.println("TEST: ERROR WRITING NEW SUBSET FILES");
+
         }
 
         fileDirectory = new Intent(this, fileDirectory.class);
@@ -686,7 +652,7 @@ public class viewScreen extends AppCompatActivity {
                 // Format decimal to be three points
                 DecimalFormat df = new DecimalFormat("#.0000");
 
-                newSlope = df.format(getSlope(graphArray[0]));
+                newSlope = df.format(getRegressionSlope(graphArray[0]));
                 newStdError = df.format(getStandardError(graphArray[0]));
                 newRSquared = df.format(getRSquared(graphArray[0]));
                 newRegSlope = df.format(getRegressionSlope(graphArray[0]));

@@ -1,6 +1,6 @@
 /*
  *  Author: Andrew Greene
- *  Last updated: March 26th, 2018
+ *  Last updated: April 14th, 2018
  *  Description: Here the user enters in all of the Relative MetaData pertaining to the data set.
  *               The data is saved and passed to the next screen(s).  Background Operations are
  *               Time, Date, and GPS Autofill, and field validation
@@ -53,24 +53,14 @@ import android.widget.AutoCompleteTextView;
 
 
 public class metaData extends AppCompatActivity {
-
-    public String mState;
     //private AutoCompleteTextView et_ON;
-    private EditText et_SN;
-    private EditText et_SID;
-    private EditText et_Temp;
-
-    static final String ON_KEY = "operatorKey";
-    static final String SN_KEY = "siteNameKey";
-    static final String T_KEY = "temperatureKey";
-
-    static final String STATE_KEY = "stateKey";
-
-    AutoCompleteTextView operatorName;
+    //private EditText et_SN;
+    //private EditText et_SID;
+    //private EditText et_Temp;
+    //static final String STATE_KEY = "stateKey";
     //String[] names = getResources().getStringArray(R.array.names_array);
 
-
-
+    AutoCompleteTextView operatorName;
 
     // Camera Variables
     ImageButton cameraB;
@@ -110,9 +100,6 @@ public class metaData extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-
-
-        //super.onRestoreInstanceState(savedInstanceState);
         // Load Saved State, Used for Autofill
 
         if (savedInstanceState != null) {
