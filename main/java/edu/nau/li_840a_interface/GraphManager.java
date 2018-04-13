@@ -1,6 +1,6 @@
 /*
  *  Author: James Beasley
- *  Last updated: March 26th, 2018
+ *  Last updated: April 6th, 2018
  *  Description: Handles the initialization and updating of the graphs, keeping a log of all every
  *               data point, and converting that log into a string to it can be written to a file
  *               in the graph screen Java file. Implements the Runnable interface so that the graph
@@ -16,9 +16,6 @@ import com.jjoe64.graphview.GraphView;
 import java.util.ArrayList;
 import java.util.Date;
 
-/*
- *
- */
 public class GraphManager implements Runnable
 {
 
@@ -39,7 +36,6 @@ public class GraphManager implements Runnable
     private boolean running;
     private boolean logging;
     private String lastData;
-    private GraphView[] graphIds;
 
     ///////////////
     // CONSTANTS //
@@ -56,6 +52,8 @@ public class GraphManager implements Runnable
 
         Date time;
 
+        // The activity is required for updating items on the UI thread, so we save it here as a
+        // class member variable
         this.activity = activity;
 
         // Initialize our array of readings
@@ -69,7 +67,7 @@ public class GraphManager implements Runnable
         tempGraph = new LineGraph(graphIds[2], "Temperature", "Time", "Temperature",
                 Color.argb(100, 255, 0, 0));
         presGraph = new LineGraph(graphIds[3], "Pressure", "Time", "Pressure",
-                Color.argb(100, 0, 255, 0));
+                Color.argb(100, 0, 125, 0));
 
         // Get the IDs for the text views used to display the data values
         co2Display = textIds[0];
@@ -87,12 +85,10 @@ public class GraphManager implements Runnable
         // Assume we are not logging a subset at the start
         logging = false;
 
-        this.graphIds = graphIds;
-
     }
 
     /*
-     *  Implementation of the runnable interface. Reads in data from the instrument, calculated the
+     *  Implementation of the runnable interface. Reads in data from the instrument, calculates the
      *  time that data came in, and adds the data to the graphs.
      */
     public void run()
@@ -118,14 +114,7 @@ public class GraphManager implements Runnable
             timeDiff = currentTime - startTime;
 
             // Add the points to the graphs
-            try
-            {
-                this.addPoints(data, timeDiff);
-            }
-            catch(Exception exception)
-            {
-
-            }
+            this.addPoints(data, timeDiff);
 
             // Wait the specified wait time
             try
@@ -150,9 +139,9 @@ public class GraphManager implements Runnable
         lastData = data;
     }
 
-    //////////////////////
-    // Button Functions //
-    //////////////////////
+    ////////////////////
+    // BUTTON METHODS //
+    ////////////////////
 
     /*
      *  Runs when the "Finalize" button is clicked. Tells the graph update loop to stop.
@@ -160,6 +149,7 @@ public class GraphManager implements Runnable
     public void deconstruct()
     {
 
+        // This variable is used to signal the while loop to stop
         running = false;
 
     }
@@ -171,11 +161,20 @@ public class GraphManager implements Runnable
     public void startlogging()
     {
 
+        Date time;
+
         // Clear the log of any previously saved data points
         dataArray = new ArrayList<DataSeries>();
 
+
         // Signal that we should be adding points to the log
         logging = true;
+
+        // Reset the time
+        time = new Date();
+        startTime = time.getTime();
+
+        resetGraphs();
 
     }
 
@@ -191,8 +190,65 @@ public class GraphManager implements Runnable
     }
 
     /*
+     *  When the "Start Logging" button is pressed, the graph should be reset. This method calls
+     *  each graphs individual reset method.
+     */
+    public void resetGraphs()
+    {
+        co2Graph.reset();
+        h2oGraph.reset();
+        tempGraph.reset();
+        presGraph.reset();
+    }
+
+    /*
+     *  When the "Enable Zoom" button is pressed, each graph's individual enableZoom method should
+     *  be called.
+     */
+    public void enableZoom()
+    {
+        co2Graph.enableZoom();
+        h2oGraph.enableZoom();
+        tempGraph.enableZoom();
+        presGraph.enableZoom();
+    }
+
+    /*
+     *  When the "Disable Zoom" button is pressed, each graph's individual disableZoom method should
+     *  be called.
+     */
+    public void disableZoom()
+    {
+        co2Graph.disableZoom();
+        h2oGraph.disableZoom();
+        tempGraph.disableZoom();
+        presGraph.disableZoom();
+    }
+
+    /*
+     *  Not linked to any button, but is used to test if the "Finalize" button should be enabled. If
+     *  the graph manager is "empty", meaning if it has recorded no data, then the finalize button
+     *  should not be clickable.
+     */
+    public boolean isEmpty()
+    {
+        if (dataArray.isEmpty())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    //////////////////////
+    // FILE I/O METHODS //
+    //////////////////////
+
+    /*
      *  Allows the graph manager to be printed. This is used for storing the data of all the graphs
-     *  in a text file.
+     *  in a CSV file.
      */
     public String toString()
     {
@@ -202,6 +258,7 @@ public class GraphManager implements Runnable
         // Initialize the output string
         output = "";
 
+        // Add the CSV header
         output += "Seconds,CO2,H2O,Temperature,Pressure\n";
 
         // Loop through each data series in the data array
@@ -218,21 +275,9 @@ public class GraphManager implements Runnable
 
     }
 
-    public boolean isEmpty()
-    {
-        if (dataArray.isEmpty())
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    ///////////////////////
-    // Private Functions //
-    ///////////////////////
+    /////////////////////
+    // PRIVATE METHODS //
+    /////////////////////
 
     /*
      *  Simple getter function. Returns the last full line received from the serial reader.
@@ -242,20 +287,12 @@ public class GraphManager implements Runnable
         return lastData;
     }
 
-    public void resetGraphs()
-    {
-        co2Graph.reset();
-        h2oGraph.reset();
-        tempGraph.reset();
-        presGraph.reset();
-    }
-
     /*
      *  Takes in a string of data from the instrument, converts it into a
      *  DataSeries, adds that DataSeries to the log, and updates each
      *  graph using the new information.
      */
-    private void addPoints(String data, long time) throws Exception
+    private void addPoints(String data, long time)
     {
 
         final DataSeries newSeries;
@@ -275,16 +312,17 @@ public class GraphManager implements Runnable
             dataArray.add(newSeries);
         }
 
-        // Update each graph with the data series
-        co2Graph.addPoint(newSeries.co2, newSeries.time);
-        h2oGraph.addPoint(newSeries.h2o, newSeries.time);
-        tempGraph.addPoint(newSeries.temp, newSeries.time);
-        presGraph.addPoint(newSeries.pres, newSeries.time);
-
-
         // These updates must be run on the UI thread in order to work
         activity.runOnUiThread(new Runnable() {
             public void run() {
+
+                // Android GraphView currently has a bug which can cause
+                // "ConcurrentModificationException"s when adding points to a graph series. Having
+                // the manager add the new points on the UI thread is done to circumvent this bug.
+                co2Graph.addPoint(newSeries.co2, newSeries.time);
+                h2oGraph.addPoint(newSeries.h2o, newSeries.time);
+                tempGraph.addPoint(newSeries.temp, newSeries.time);
+                presGraph.addPoint(newSeries.pres, newSeries.time);
 
                 // Update each text view with the data series
                 co2Display.setText(String.valueOf(newSeries.co2));
@@ -298,7 +336,7 @@ public class GraphManager implements Runnable
     }
 
     /////////////////////
-    // Private Classes //
+    // PRIVATE CLASSES //
     /////////////////////
 
     /*
@@ -339,6 +377,13 @@ public class GraphManager implements Runnable
 
         }
 
+        /*
+         *  Takes in a string, and parses the data into an array of four float values. One for each
+         *  of the graphs. If any problems are encountered while parsing out a particular value,
+         *  then that value is set to zero. Assuming that the instrument is properly communicating
+         *  with the application, then these exceptions should never occur, but under rare sets of
+         *  circumstances, they might,
+         */
         private float[] parseData(String data)
         {
 
@@ -421,7 +466,7 @@ public class GraphManager implements Runnable
 
         /*
          *  Allows the series to be printed as string. Used for logging to a
-         *  text file.
+         *  CSV file.
          */
         public String toString()
         {

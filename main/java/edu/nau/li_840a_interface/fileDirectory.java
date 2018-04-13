@@ -43,6 +43,8 @@ import java.util.UUID;
 import android.content.Context;
 import android.net.Uri;
 import android.support.v4.content.FileProvider;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 
 import org.w3c.dom.Text;
 
@@ -181,57 +183,77 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
                     public void onClick(View view) {
                         listOfUri.clear();
                         int count = 0;
-
-                        //DOUBLE LOOP THRU SELECTED FILES AND LVCOUNT
-                        for( j = 0; j < listSize; j++){
-                            if(lv.isItemChecked(j) == true ) {
-
-
-                                File file = new File(context.getFilesDir(), "M-" + lv.getItemAtPosition(j - count).toString());
-                                File graphFile = new File(context.getFilesDir(), "G-" + lv.getItemAtPosition(j - count).toString());
-
-                                File imageFile = new File(context.getFilesDir(), "I-" + lv.getItemAtPosition(j - count).toString().substring(0, lv.getItemAtPosition(j - count).toString().length() - 4) + ".png");
-
-
-
-
-                                if (j > 0) {
+                        AlertDialog.Builder builder;
+                        builder = new AlertDialog.Builder(context);
+                        builder.setTitle("DELETING FILES")
+                                .setMessage("Are you sure you want to delete these files?")
+                                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        int count = 0;
+                                        //DOUBLE LOOP THRU SELECTED FILES AND LVCOUNT
+                                        for( j = 0; j < listSize; j++){
+                                            if(lv.isItemChecked(j) == true ) {
 
 
-                                    //ADD ITEM TO LIST FOR APPFILES TO REMOVE OUTSIDE OF LOOP
+                                                File file = new File(context.getFilesDir(), "M-" + lv.getItemAtPosition(j - count).toString());
+                                                File graphFile = new File(context.getFilesDir(), "G-" + lv.getItemAtPosition(j - count).toString());
 
-
-                                    file.delete();
-                                    graphFile.delete();
-                                    imageFile.delete();
-
-                                }
-
-                                else {
-                                   // btnView.setText(Integer.toString(j));
-                                    // appFiles.remove(lv.getItemAtPosition(j - 1));
-                                    file.delete();
-                                    graphFile.delete();
-                                    imageFile.delete();
-
-                                }
-                                appFiles.remove(appFiles.indexOf(lv.getItemAtPosition(j - count)));
-                                count = count +1;
-
-                            }
+                                                File imageFile = new File(context.getFilesDir(), "I-" + lv.getItemAtPosition(j - count).toString().substring(0, lv.getItemAtPosition(j - count).toString().length() - 4) + ".png");
 
 
 
-                            arrayAdapter.notifyDataSetChanged();}
+
+                                                if (j > 0) {
 
 
-                        for(int l= 0; l < lv.getCount(); l++){
-                            lv.setItemChecked(l, false);
+                                                    //ADD ITEM TO LIST FOR APPFILES TO REMOVE OUTSIDE OF LOOP
 
 
-                        }
+                                                    file.delete();
+                                                    graphFile.delete();
+                                                    imageFile.delete();
+
+                                                }
+
+                                                else {
+                                                    // btnView.setText(Integer.toString(j));
+                                                    // appFiles.remove(lv.getItemAtPosition(j - 1));
+                                                    file.delete();
+                                                    graphFile.delete();
+                                                    imageFile.delete();
+
+                                                }
+                                                appFiles.remove(appFiles.indexOf(lv.getItemAtPosition(j - count)));
+                                                count = count +1;
+
+                                            }
+
+
+
+                                            arrayAdapter.notifyDataSetChanged();}
+
+
+                                        for(int l= 0; l < lv.getCount(); l++){
+                                            lv.setItemChecked(l, false);
+
+                                        }
+                                    }
+                                })
+                                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        //do nothing
+                                    }
+                                })
+                                .setIcon(android.R.drawable.ic_dialog_alert)
+                                .show();
+
+
+
                         arrayAdapter.notifyDataSetChanged();
                         selectedFiles.clear();
+                        checkFileCount();
                         //Intent refresh;
                         //refresh = new Intent(getApplicationContext() , fileDisplay.class);
                         //startActivity(refresh);
@@ -278,6 +300,11 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
                 btnUndo.setClickable(true);
                 btnUndo.setBackgroundResource(android.R.drawable.btn_default);
                 int listSize = lv.getCount();
+                for(int l= 0; l < lv.getCount(); l++){
+                    lv.setItemChecked(l, false);
+
+                }
+                checkFileCount();
                 String filter = et_Filter.getText().toString();
                 for (int l = 0; l < lv.getCount(); l++){
                     if(lv.getItemAtPosition(l).toString().contains(filter) == true){
@@ -323,6 +350,11 @@ public class fileDirectory extends AppCompatActivity implements OnClickListener 
                 btnFilter.setBackgroundResource(android.R.drawable.btn_default);
                 btnFilter.setClickable(true);
                 Collections.reverse(appFiles);
+                for(int l= 0; l < lv.getCount(); l++){
+                    lv.setItemChecked(l, false);
+
+                }
+                checkFileCount();
 
             }
 

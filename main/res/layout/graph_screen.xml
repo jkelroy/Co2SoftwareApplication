@@ -135,10 +135,28 @@
             android:orientation="horizontal">
 
             <Button
+                android:id="@+id/backbutton"
+                android:layout_width="0dip"
+                android:layout_height="match_parent"
+                android:layout_weight="0.25"
+                android:onClick="goToMetadata"
+                android:text="Back"
+                android:background = "@android:drawable/btn_default"/>
+
+            <Button
+                android:id="@+id/zooombutton"
+                android:layout_width="0dip"
+                android:layout_height="match_parent"
+                android:layout_weight="0.25"
+                android:onClick="zoomToggle"
+                android:text="Enable Zoom"
+                android:background = "@android:drawable/btn_default"/>
+
+            <Button
                 android:id="@+id/logbutton"
                 android:layout_width="0dip"
                 android:layout_height="match_parent"
-                android:layout_weight="0.5"
+                android:layout_weight="0.25"
                 android:onClick="startStopLog"
                 android:text="Start Logging"
                 android:background = "@android:drawable/btn_default"/>
@@ -148,7 +166,7 @@
                 android:enabled="false"
                 android:layout_width="0dip"
                 android:layout_height="match_parent"
-                android:layout_weight="0.5"
+                android:layout_weight="0.25"
                 android:onClick="finalize"
                 android:text="Finalize"
                 android:background = "@android:drawable/btn_default"/>

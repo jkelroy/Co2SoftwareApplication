@@ -1,6 +1,6 @@
 /*
  *  Author: James Beasley
- *  Last updated: March 26th, 2018
+ *  Last updated: April 6th, 2018
  *  Description: Java file for the graph screen of the application. Contains methods which
  *               correspond to each button on the screen, as well as a receiver for data from the
  *               gas analyzer.
@@ -28,8 +28,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.jjoe64.graphview.GraphView;
+
+import org.apache.commons.math3.stat.regression.SimpleRegression;
+
 import java.io.FileOutputStream;
 import java.lang.ref.WeakReference;
+import java.text.DecimalFormat;
 import java.util.Set;
 
 public class graphScreen extends AppCompatActivity {
@@ -40,28 +44,38 @@ public class graphScreen extends AppCompatActivity {
     private Thread manager_thread;
     private SerialReader reader;
 
+    /*
+     *  Constructor for the graph screen. Fetches the screen IDs for the graphs and text boxes, and
+     *  passes them off to the GraphManager to be updated at a rate of once per second.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.graph_screen);
 
+        // Get the screen IDs for each of the four graphs
         graphIds = new GraphView[4];
         graphIds[0] = findViewById(R.id.graph1);
         graphIds[1] = findViewById(R.id.graph2);
         graphIds[2] = findViewById(R.id.graph3);
         graphIds[3] = findViewById(R.id.graph4);
 
+        // Get the screen IDs for each of the four text views
         textIds = new TextView[4];
         textIds[0] = findViewById(R.id.co2display);
         textIds[1] = findViewById(R.id.h2odisplay);
         textIds[2] = findViewById(R.id.tempdisplay);
         textIds[3] = findViewById(R.id.presdisplay);
 
+        // Initialize the handler. This is used for the USB serial communication
         mHandler = new graphScreen.MyHandler(this);
 
+        // Initialize a new serial reader object, for reading in information from the instrument
         reader = new SerialReader();
 
+        // Initialize a new graph manager using the graph and text IDs, and then set it to start
+        // updating on its own thread
         manager = new GraphManager(this, graphIds, textIds);
         manager_thread = new Thread(manager);
         manager_thread.start();
@@ -164,11 +178,51 @@ public class graphScreen extends AppCompatActivity {
 
     }
 
+    /*
+     *  Runs when the zoom button is pressed. If it currently says "Enable Zoom", then it tells
+     *  the graph manager to enable zoom for each graph. If it current says "Disable Zoom", then it
+     *  tells the graph manager to disable zoom for each graph.
+     */
+    public void zoomToggle(View view)
+    {
+
+        Button button = findViewById(R.id.zooombutton);
+
+        // If the button currently says "Enable Zoom"
+        if (button.getText().equals("Enable Zoom"))
+        {
+            button.setText("Disable Zoom");
+            manager.enableZoom();
+        }
+
+        // If the button currently says "Disable Zoom"
+        else
+        {
+            button.setText("Enable Zoom");
+            manager.disableZoom();
+        }
+    }
+
+    /*
+     *  Runs when the "Back" button is pressed. Simply goes back to the metadata screen without
+     *  witting any files.
+     */
+    public void goToMetadata(View view)
+    {
+        Intent metaDataScreen;
+        metaDataScreen = new Intent(this, metaData.class);
+        startActivity(metaDataScreen);
+    }
+
+    /*
+     *  Runs when the "Finalize" button is pressed. Gets the string values for the graph file,
+     *  metadata file, and image file, writes them to files, deconstructs the graph manager, and
+     *  then takes the user to the file directory.
+     */
     public void finalize(View view)
     {
-        String reading;
 
-        // Metadata values pulled from previous screen
+        String reading;
         String metaSite;
         String metaOpName;
         String metaSampleId;
@@ -181,10 +235,21 @@ public class graphScreen extends AppCompatActivity {
         String metaElevation;
         String imageString;
         String fileName;
-
+        String graphArray[];
+        String slope;
+        String rSquared;
+        String stdError;
+        String regSlope;
         FileOutputStream outStream;
-
         Intent fileScreen;
+
+        // Deconstruct the manager
+        manager.stoplogging();
+        manager.deconstruct();
+        reader.communicating = false;
+
+        // Get the graph CSV from the manager
+        reading = manager.toString();
 
         // Fetch the metadata values
         metaSite = getIntent().getStringExtra("SITE_NAME");
@@ -198,22 +263,28 @@ public class graphScreen extends AppCompatActivity {
         metaElevation = getIntent().getStringExtra("ELEVATION");
         imageString = getIntent().getStringExtra("IMAGE");
 
+        // Split the graph data so that we can only get stats on the CO2 graph
+        graphArray = splitGraphData(reading);
+        DecimalFormat df = new DecimalFormat("#.0000");
+
+        // Calculate each of the stats
+        slope = df.format(getSlope(graphArray[0]));
+        rSquared = df.format(getRSquared(graphArray[0]));
+        stdError = df.format(getStandardError(graphArray[0]));
+        regSlope = df.format(getRegressionSlope(graphArray[0]));
 
         // Construct the CSV file content
-        metaString = "Operator Name,Site Name,Sample ID,Temperature,Comments,Time and Date,GPS\n" +
+        metaString = "Operator Name,Site Name,Sample ID,Temperature,Comments,Time and Date,Longitude," +
+                     "Latitude,Elevation,Slope,R Squared,Standard Error,Regression Slope\n" +
                      metaOpName + "," + metaSite + "," + metaSampleId + "," + metaTemp + "," +
-                     metaComments + "," + metaTime + "," + metaLong + "," + metaLat + "," + metaElevation;
+                     metaComments + "," + metaTime + "," + metaLong + "," + metaLat + "," +
+                     metaElevation + "," + slope + "," + rSquared + "," + stdError + "," + regSlope;
 
 
-        manager.stoplogging();
-        manager.deconstruct();
-        reader.communicating = false;
-
-        reading = manager.toString();
-
-        // Filename
+        // Build the file name using the site name, sample id, and time stamp
         fileName = metaSite + "_" + metaSampleId + "_" + metaTime;
 
+        // In case any file I/O exception happen, we write this in a try/catch block
         try
         {
             // Graph File
@@ -226,11 +297,11 @@ public class graphScreen extends AppCompatActivity {
             outStream.write(metaString.getBytes());
             outStream.close();
 
-            // Image File
+            // Image File, only if an image was taken
             if (!imageString.equals("NA"))
             {
                 outStream = openFileOutput("I-" + fileName + ".png", Context.MODE_APPEND);
-                stringToBitMap(imageString).compress(Bitmap.CompressFormat.PNG, 70, outStream);
+                stringToBitMap(imageString).compress(Bitmap.CompressFormat.PNG, 100, outStream);
                 outStream.close();
             }
 
@@ -240,11 +311,15 @@ public class graphScreen extends AppCompatActivity {
 
         }
 
+        // Initialize a new file screen and take the user there
         fileScreen = new Intent(this, fileDirectory.class);
         startActivity(fileScreen);
 
     }
 
+    /*
+     *
+     */
     private Bitmap stringToBitMap(String input)
     {
         try
@@ -381,6 +456,14 @@ public class graphScreen extends AppCompatActivity {
     // END OF USB SERIAL CODE //
     ////////////////////////////
 
+    /////////////////////
+    // PRIVATE CLASSES //
+    /////////////////////
+
+    /*
+     *  Class used to communicate with the USB serial connection. More or less, it is just a really
+     *  glorified string builder.
+     */
     private class SerialReader
     {
 
@@ -389,7 +472,7 @@ public class graphScreen extends AppCompatActivity {
         public boolean communicating;
 
         /*
-         *
+         *  Constructor for the serial reader. Initializes all the class member variables.
          */
         public SerialReader()
         {
@@ -398,13 +481,23 @@ public class graphScreen extends AppCompatActivity {
             communicating = true;
         }
 
+        /*
+         *  This method is called every time the USB port picks up a piece of data from the
+         *  instrument. Makes sure it is not empty or a space, then adds it to the string being
+         *  built. If the message contains a line break, then we know it is the end of the current
+         *  message.
+         */
         public void addChar(String input)
         {
 
+            // Check to make sure its not a space or ampty
             if (input.equals("") || input.equals(" "))
             {
                 return;
             }
+
+            // If it contains a line break, then we know we have reached the end of the current
+            // message. Send the complete message to the graph manager.
             if (input.contains("\n"))
             {
                 currentStream += input;
@@ -412,6 +505,9 @@ public class graphScreen extends AppCompatActivity {
                 currentStream = "";
                 manager.updateData(completeStream);
             }
+
+            // If it does not contain a line break, then we just add the message to the string
+            // being built.
             else
             {
                 currentStream += input;
@@ -421,10 +517,224 @@ public class graphScreen extends AppCompatActivity {
 
     }
 
+    /*
+     * If the Android back button is pressed, we don't want anything to happen since all of our
+     * app nagivation is handled by on screen buttons.
+     */
     @Override
     public void onBackPressed()
     {
 
     }
 
+    // JOEY ADDED STATISTICS HERE TO BE ABLE TO WRITE TO THE CSV FILE
+    private String[] splitGraphData(String graphFileContents)
+    {
+
+        String lines[];
+        String values[];
+        String output[];
+        String co2Points;
+        String h2oPoints;
+        String tempPoints;
+        String presPoints;
+        int count;
+
+        co2Points = "";
+        h2oPoints = "";
+        tempPoints = "";
+        presPoints = "";
+
+        lines = graphFileContents.split("\n");
+
+        for (count = 1; count < lines.length; count++)
+        {
+
+            values = lines[count].split(",");
+
+            co2Points += values[0] + "," + values[1] + "\n";
+            h2oPoints += values[0] + "," + values[2] + "\n";
+            tempPoints += values[0] + "," + values[3] + "\n";
+            presPoints += values[0] + "," + values[4] + "\n";
+
+        }
+
+        output = new String[4];
+
+        output[0] = co2Points;
+        output[1] = h2oPoints;
+        output[2] = tempPoints;
+        output[3] = presPoints;
+
+        return output;
+
+    }
+
+    private double getStandardError(String graphPoints){
+
+        String[] data;
+        String[] tempData;
+        int numOfPoints;
+
+        if (graphPoints == ""){
+            return 0;
+        }
+
+        SimpleRegression SR = new SimpleRegression();
+
+
+        //split data
+        data = graphPoints.split("\n");
+        numOfPoints = data.length;
+
+        //loop through and get mean of all points
+        for(int i = 0; i < numOfPoints; i++){
+            tempData = data[i].split(",");
+            SR.addData( Double.parseDouble(tempData[0]),  Double.parseDouble(tempData[1]));
+        }
+
+        return SR.getSlopeStdErr();
+
+
+    }
+
+    private double getRegressionSlope(String graphPoints){
+
+        String[] data;
+        String[] tempData;
+        int numOfPoints;
+
+        if (graphPoints == ""){
+            return 0;
+        }
+
+        SimpleRegression SR = new SimpleRegression();
+
+
+        //split data
+        data = graphPoints.split("\n");
+        numOfPoints = data.length;
+
+        //loop through and get mean of all points
+        for(int i = 0; i < numOfPoints; i++){
+            tempData = data[i].split(",");
+            SR.addData( Double.parseDouble(tempData[0]),  Double.parseDouble(tempData[1]));
+        }
+
+        return SR.getSlope();
+    }
+
+    private double getYIntercept(String graphPoints){
+
+        String[] data;
+        String[] tempData;
+        int numOfPoints;
+
+        if (graphPoints == ""){
+            return 0;
+        }
+
+        SimpleRegression SR = new SimpleRegression();
+
+
+        //split data
+        data = graphPoints.split("\n");
+        numOfPoints = data.length;
+
+        //loop through and get mean of all points
+        for(int i = 0; i < numOfPoints; i++){
+            tempData = data[i].split(",");
+            SR.addData( Double.parseDouble(tempData[0]),  Double.parseDouble(tempData[1]));
+        }
+
+        return SR.getIntercept();
+
+
+    }
+
+    private float getSlope(String graphPoints){
+        float slope = 0;
+        float firstSecond;
+        float lastSecond;
+        float firstDataPoint;
+        float lastDataPoint;
+        String[] firstData;
+        String[] lastData;
+        String[] tempData;
+
+        if (graphPoints == ""){
+            return 0;
+        }
+
+        //split data
+        tempData = graphPoints.split("\n");
+
+        firstData = tempData[0].split(",");
+        lastData = tempData[tempData.length - 1].split(",");
+
+        firstSecond = Float.parseFloat(firstData[0]);
+        lastSecond = Float.parseFloat(lastData[0]);
+
+
+        firstDataPoint = Float.parseFloat(firstData[1]);
+        lastDataPoint = Float.parseFloat(lastData[1]);
+
+
+        slope = (lastDataPoint-firstDataPoint)/(lastSecond-firstSecond);
+        System.out.println("TEST SLOPE : "  + slope);
+
+        return slope;
+    }
+
+    private double getRSquared(String graphPoints){
+
+        double xTotal = 0;
+        double yTotal = 0;
+        double xSquaredTotal = 0;
+        double ySquaredTotal = 0;
+        double XY = 0;
+        double rSquared = 0;
+        String[] data;
+        String[] tempData;
+        int numOfPoints;
+        double tempX;
+        double tempY;
+
+        if (graphPoints == ""){
+            return 0.0;
+        }
+
+        //split data
+        data = graphPoints.split("\n");
+        numOfPoints = data.length;
+
+        //loop through and get xtotal and ytotal and their squares
+        for(int i = 0; i < numOfPoints; i++){
+            tempData = data[i].split(",");
+
+            tempX = Double.parseDouble(tempData[0]);
+            tempY = Double.parseDouble(tempData[1]);
+
+            //get x and y
+            xTotal += tempX;
+            yTotal += tempY;
+
+            //get x and y rSquared
+            xSquaredTotal += (tempX * tempX);
+            ySquaredTotal += (tempY * tempY);
+
+            //get sum of x*y
+            XY += (tempX * tempY);
+        }
+
+        //rsquared equation
+        rSquared = (((numOfPoints * XY) - (xTotal * yTotal)) /
+                ((Math.sqrt((numOfPoints * xSquaredTotal) - (xTotal*xTotal))) * (Math.sqrt((numOfPoints * ySquaredTotal) - (yTotal*yTotal)))));
+
+        //square r
+        rSquared  = (rSquared * rSquared);
+
+        return rSquared;
+    }
+    // END OF JOEYS CODE ADDING
 }

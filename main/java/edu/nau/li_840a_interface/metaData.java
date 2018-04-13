@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Path;
 import android.location.Location;
 import android.os.Build;
 import android.provider.MediaStore;
@@ -24,6 +25,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -34,10 +36,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.security.AuthProvider;
 import java.text.DateFormat;
 import android.widget.*;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.EditText;
@@ -47,6 +53,24 @@ import android.widget.AutoCompleteTextView;
 
 
 public class metaData extends AppCompatActivity {
+
+    public String mState;
+    //private AutoCompleteTextView et_ON;
+    private EditText et_SN;
+    private EditText et_SID;
+    private EditText et_Temp;
+
+    static final String ON_KEY = "operatorKey";
+    static final String SN_KEY = "siteNameKey";
+    static final String T_KEY = "temperatureKey";
+
+    static final String STATE_KEY = "stateKey";
+
+    AutoCompleteTextView operatorName;
+    //String[] names = getResources().getStringArray(R.array.names_array);
+
+
+
 
     // Camera Variables
     ImageButton cameraB;
@@ -83,26 +107,42 @@ public class metaData extends AppCompatActivity {
     };
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-
+    protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+
+
+        //super.onRestoreInstanceState(savedInstanceState);
+        // Load Saved State, Used for Autofill
+
+        if (savedInstanceState != null) {
+            //mState = (String) savedInstanceState.get(STATE_KEY);
+            //et_ON.setText("TEST");
+            //CharSequence test = savedInstanceState.getCharSequence("op_string");
+            //operatorName.setText(test);
+            Log.d("SAVE", "Saved Instance State is not null");
+        }
+
         setContentView(R.layout.meta_data);
 
         // Instance Variables by ID
         Date currentDate = new Date();
         EditText siteName = (EditText) findViewById(R.id.et_SN);
-        AutoCompleteTextView operatorName = (AutoCompleteTextView) findViewById(R.id.et_ON);
+        //operatorName = (AutoCompleteTextView) findViewById(R.id.et_ON);
+        operatorName = (AutoCompleteTextView) findViewById(R.id.et_ON);
+
         EditText sampleID = (EditText) findViewById(R.id.et_SID);
         EditText temperature = (EditText) findViewById(R.id.et_Temp);
         EditText comments = (EditText) findViewById(R.id.et_Com);
         imagePreview = findViewById(R.id.imageView);
 
         // Initiates field Validation, Disables "Finish" button on Screen Creation
-        operatorName.addTextChangedListener(textWatcher);
+        //operatorName.addTextChangedListener(textWatcher);
         siteName.addTextChangedListener(textWatcher);
         sampleID.addTextChangedListener(textWatcher);
         checkFieldsForEmptyValues();
+
+
 
 
         // AutoFill
@@ -110,6 +150,7 @@ public class metaData extends AppCompatActivity {
         // Get the string array
         String[] names = getResources().getStringArray(R.array.names_array);
         // Create the adapter and set it to the AutoCompleteTextView
+
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, names);
         operatorName.setAdapter(adapter);
 
@@ -175,6 +216,38 @@ public class metaData extends AppCompatActivity {
         GPS_b.performClick();
 
 
+
+
+    }
+
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        //String Operator = operatorName.getString;
+        //savedInstanceState.putString(STATE_KEY, mState);
+        //.putCharSequence("op_string", Operator);
+        //Log.d("SAVE", Operator+ " as Saved");
+
+
+        //outState.putString(SN_KEY, et_SN.getText().toString());
+        //outState.putString(T_KEY, et_Temp.getText().toString());
+
+        // call superclass to save any view hierarchy
+    }
+
+    // Restore Save State
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        //et_ON.setText("TEST");
+        //operatorName = (AutoCompleteTextView) findViewById(R.id.et_ON);
+        //operatorName.setText(savedInstanceState.getString("op_string"));
+        Log.d("SAVE", " Was Restored");
+
+        //et_SN.setText(savedInstanceState.getString(SN_KEY));
+        //et_Temp.setText(savedInstanceState.getString(T_KEY));
+
     }
 
     // Requesting Permissions for GPS
@@ -206,11 +279,10 @@ public class metaData extends AppCompatActivity {
                 // IGNORE THIS ERROR.  App still runs, Android Studio thinks I am not checking permissions,
                 // but in reality I am Checking Permissions in the if statement above
                 // (noinspection MissingPermission)
-                locationManager.requestLocationUpdates("gps", 30000, 0, listener);
+                locationManager.requestLocationUpdates("gps", 5000, 0, listener);
             }
         });
     }
-
 
     //***Camera***
     public void dispatchTakePictureIntent(View view) {
@@ -284,12 +356,19 @@ public class metaData extends AppCompatActivity {
     }
 
 
+
+
     // "FINISH" Button, goes to the next screen to start a new data set
     public void goGraphScreen(View view)
     {
-        Context context = this;
+        String[] passingValues = new String[8];
+        int counter;
+        Intent graphScreen;
+        //Context context = this; // This might be unnecessary
+
+        // Fetch all the text boxes
         EditText siteName = (EditText) findViewById(R.id.et_SN);
-        EditText operatorName = (EditText) findViewById(R.id.et_ON);
+        AutoCompleteTextView operatorName = findViewById(R.id.et_ON);
         EditText sampleID = (EditText) findViewById(R.id.et_SID);
         EditText temperature = (EditText) findViewById(R.id.et_Temp);
         EditText comments = (EditText) findViewById(R.id.et_Com);
@@ -297,15 +376,27 @@ public class metaData extends AppCompatActivity {
         EditText latitude = findViewById(R.id.et_GPSLat);
         EditText elevation = findViewById(R.id.et_Elevation);
 
+        // Get each string value from the text boxes and place them in an array
+        passingValues[0] = siteName.getText().toString();
+        passingValues[1] = operatorName.getText().toString();
+        passingValues[2] = sampleID.getText().toString();
+        passingValues[3] = temperature.getText().toString();
+        passingValues[4] = comments.getText().toString();
+        passingValues[5] = longitude.getText().toString();
+        passingValues[6] = latitude.getText().toString();
+        passingValues[7] = elevation.getText().toString();
 
-        String site = siteName.getText().toString();
-        String name = operatorName.getText().toString();
-        String sampleid = sampleID.getText().toString();
-        String temp = temperature.getText().toString();
-        String commentS = comments.getText().toString();
-        String longitudeS = longitude.getText().toString();
-        String latitudeS = latitude.getText().toString();
-        String elevationS = elevation.getText().toString();
+        // Check each value in the array for null or empty strings
+        for (counter = 0; counter < passingValues.length; counter++)
+        {
+
+            // If one is a null value or empty string, set it to the string "NULL"
+            if (passingValues[counter] == null || passingValues[counter].equals(""))
+            {
+                passingValues[counter] = "NULL";
+            }
+
+        }
 
 
         String imageString = "NA";
@@ -316,24 +407,22 @@ public class metaData extends AppCompatActivity {
             //TODO Bring up a snackbar or message asking if they want to take a picture?
         }
 
-
-        Intent graphScreen;
-
+        // Initialize the graph screen
         graphScreen = new Intent(this, graphScreen.class);
 
-        // Passing strings to next screen
-        graphScreen.putExtra("SITE_NAME", site);
-        graphScreen.putExtra("OPERATOR_NAME", name);
-        graphScreen.putExtra("SAMPLE_ID", sampleid);
-        graphScreen.putExtra("TEMPERATURE", temp);
-        graphScreen.putExtra("COMMENTS", commentS );
+        // Bundle in our array values to the graph screen
+        graphScreen.putExtra("SITE_NAME", passingValues[0]);
+        graphScreen.putExtra("OPERATOR_NAME", passingValues[1]);
+        graphScreen.putExtra("SAMPLE_ID", passingValues[2]);
+        graphScreen.putExtra("TEMPERATURE", passingValues[3]);
+        graphScreen.putExtra("COMMENTS", passingValues[4]);
         graphScreen.putExtra("IMAGE", imageString );
         graphScreen.putExtra("TIME", currentDateTimeFormatted);
-        graphScreen.putExtra("GPSLong", longitudeS);
-        graphScreen.putExtra("GPSLat", latitudeS);
-        graphScreen.putExtra("ELEVATION", elevationS);
+        graphScreen.putExtra("GPSLong", passingValues[5]);
+        graphScreen.putExtra("GPSLat", passingValues[6]);
+        graphScreen.putExtra("ELEVATION", passingValues[7]);
 
-
+        // Start the graph screen
         startActivity(graphScreen);
 
     }

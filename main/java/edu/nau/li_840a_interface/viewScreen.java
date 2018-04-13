@@ -1,14 +1,18 @@
 package edu.nau.li_840a_interface;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -27,7 +31,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.String;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 public class viewScreen extends AppCompatActivity {
@@ -50,6 +59,10 @@ public class viewScreen extends AppCompatActivity {
     private GraphView graphIds[];
     private TextView textIds[];
     private String graphArray[];
+
+    private String newGraph;
+    private String newMeta;
+    private String newImage;
 
     private LineGraph co2Graph;
     private LineGraph h2oGraph;
@@ -145,7 +158,22 @@ public class viewScreen extends AppCompatActivity {
                 imageData += line;
                 line = buffReader.readLine();
             }
+        /*
+            int my_char;
+            my_char = buffReader.read();
+            while(my_char != -1)
+            {
+                imageData += (char) my_char;
+                my_char = buffReader.read();
+            }
 
+            static String readFile(String path, Charset encoding)
+  throws IOException
+{
+  byte[] encoded = Files.readAllBytes(Paths.get(path));
+  return new String(encoded, encoding);
+}
+*/
 
         //return error and null for all data if it cannot open
         } catch (Exception e) {
@@ -164,7 +192,8 @@ public class viewScreen extends AppCompatActivity {
 
 
         }
-
+            System.out.println("TEST: Image file name in: " + imageFile);
+            System.out.println("TEST: Image file content in: " + imageData);
         try
         {
             FileInputStream stream = openFileInput(imageFile);
@@ -176,10 +205,11 @@ public class viewScreen extends AppCompatActivity {
         }
 
 
-        metaData = metaData.split("\n")[1];
-        metaDataArray = metaData.split(",");
+        //metaData = metaData.split("\n")[1];
+        metaDataArray = metaData.split("\n")[1].split(",");
 
-        //put text in each box
+
+        // Put text in each box
         fileName.setText("FILE : " + metaFile.substring(2));
         operator.setText("Operator Name : " + metaDataArray[0]);
         site.setText("Site  Name : " + metaDataArray[1]);
@@ -187,18 +217,9 @@ public class viewScreen extends AppCompatActivity {
         temperature.setText("Temperature : " + metaDataArray[3]);
         comments.setText("Comments : " + metaDataArray[4]);
         timeAndDate.setText("Time and Date : " + metaDataArray[5]);
-
-        try {
-            longitude.setText("Longitude : " + metaDataArray[6]);
-            latitude.setText("Latitude : " + metaDataArray[7]);
-            elevation.setText("Elevation : " + metaDataArray[8]);
-        } catch(Exception exception){
-            longitude.setText("Longitude : Null");
-            latitude.setText("Latitude : Null" );
-            elevation.setText("Elevation : Null");
-        }
-
-
+        longitude.setText("Longitude : " + metaDataArray[6]);
+        latitude.setText("Latitude : " + metaDataArray[7]);
+        elevation.setText("Elevation : " + metaDataArray[8]);
 
         //get graph info to string array
         graphArray = new String[4];
@@ -240,7 +261,7 @@ public class viewScreen extends AppCompatActivity {
         tempGraph = new LineGraph(graphIds[2], "Temperature", "Time", "Temperature",
                 Color.argb(100, 255, 0, 0), graphArray[2]);
         presGraph = new LineGraph(graphIds[3], "Pressure", "Time", "Pressure",
-                Color.argb(100, 0, 255, 0), graphArray[3]);
+                Color.argb(100, 0, 125, 0), graphArray[3]);
 
         //add a regression line to the co2 graph
         co2Graph.addRegLine(yIntercept, regressionSlope);
@@ -257,6 +278,8 @@ public class viewScreen extends AppCompatActivity {
         graphIds[2].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
         graphIds[3].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
 
+        co2Graph.resetZoom();
+
 
     }
 
@@ -270,6 +293,7 @@ public class viewScreen extends AppCompatActivity {
         graphIds[3].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
         graphIds[0].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
 
+        h2oGraph.resetZoom();
     }
 
     public void showTemp(View view)
@@ -282,6 +306,7 @@ public class viewScreen extends AppCompatActivity {
         graphIds[0].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
         graphIds[1].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
 
+        tempGraph.resetZoom();
     }
 
     public void showPres(View view)
@@ -293,6 +318,8 @@ public class viewScreen extends AppCompatActivity {
         graphIds[0].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
         graphIds[1].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
         graphIds[2].setLayoutParams(new LinearLayout.LayoutParams(0, 0));
+
+        presGraph.resetZoom();
     }
 
     private String[] splitGraphData(String graphFileContents)
@@ -450,28 +477,26 @@ public class viewScreen extends AppCompatActivity {
 
 
         slope = (lastDataPoint-firstDataPoint)/(lastSecond-firstSecond);
-        System.out.println("TEST SLOPE : "  + slope);
 
         return slope;
     }
 
-    //TODO; for all getstats if graph is null return 0
     private double getRSquared(String graphPoints){
 
-        float xTotal = 0;
-        float yTotal = 0;
-        float xSquaredTotal = 0;
-        float ySquaredTotal = 0;
-        float XY = 0;
+        double xTotal = 0;
+        double yTotal = 0;
+        double xSquaredTotal = 0;
+        double ySquaredTotal = 0;
+        double XY = 0;
         double rSquared = 0;
         String[] data;
         String[] tempData;
         int numOfPoints;
-        float tempX;
-        float tempY;
+        double tempX;
+        double tempY;
 
         if (graphPoints == ""){
-            return 0;
+            return 0.0;
         }
 
         //split data
@@ -482,8 +507,8 @@ public class viewScreen extends AppCompatActivity {
         for(int i = 0; i < numOfPoints; i++){
             tempData = data[i].split(",");
 
-            tempX = Float.parseFloat(tempData[0]);
-            tempY = Float.parseFloat(tempData[1]);
+            tempX = Double.parseDouble(tempData[0]);
+            tempY = Double.parseDouble(tempData[1]);
 
             //get x and y
             xTotal += tempX;
@@ -507,6 +532,9 @@ public class viewScreen extends AppCompatActivity {
         return rSquared;
     }
 
+    /*
+     *
+     */
     public void goToFileDirectory(View view)
     {
         Intent fileDirectory;
@@ -514,6 +542,104 @@ public class viewScreen extends AppCompatActivity {
         fileDirectory = new Intent(this, fileDirectory.class);
 
         startActivity(fileDirectory);
+
+    }
+
+    /*
+     *
+     */
+    public void saveAndGoToFileDirectory(View view)
+    {
+
+        Intent fileDirectory;
+        Date currentDate;
+        DateFormat dateAndTimeFormat;
+        String currentDateTimeFormatted;
+        String oldFileName;
+        String newFileName;
+        String newGraphFileName;
+        String newMetaFileName;
+        String newImageFileName;
+        FileOutputStream outStream;
+
+        currentDate = new Date();
+
+        // Format time to filename
+        dateAndTimeFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        currentDateTimeFormatted = dateAndTimeFormat.format(currentDate);
+
+        oldFileName = getIntent().getStringExtra("GRAPHFILE");
+        oldFileName = oldFileName.substring(2, oldFileName.indexOf("."));
+
+        if (oldFileName.contains("_subgraph_"))
+        {
+            newFileName = oldFileName.split("_subgraph_")[0] + "_subgraph_" + currentDateTimeFormatted + ".csv";
+        }
+        else
+        {
+            newFileName = oldFileName + "_subgraph_" + currentDateTimeFormatted + ".csv";
+        }
+
+        newGraphFileName = "G-" + newFileName;
+        newMetaFileName = "M-" + newFileName;
+        newImageFileName = "I-" + newFileName.replace(".csv", ".png");
+
+
+        System.out.println("TEST: Image file name out: " + newImageFileName);
+        System.out.println("TEST: Image file content out: " + newImage);
+
+        // Write the new subsection to the graph file
+        try
+        {
+            // New graph file
+            outStream = openFileOutput(newGraphFileName, Context.MODE_PRIVATE);
+            outStream.write(newGraph.getBytes());
+            outStream.close();
+
+            // New meta file
+            outStream = openFileOutput(newMetaFileName, Context.MODE_PRIVATE);
+            outStream.write(newMeta.getBytes());
+            outStream.close();
+
+            // New image file
+            outStream = openFileOutput(newImageFileName, Context.MODE_PRIVATE);
+            outStream.write(newImage.getBytes());
+            outStream.close();
+        }
+        catch(Exception exception)
+        {
+            System.out.println("TEST: ERROR WRITING NEW SUBSET FILES");
+        }
+
+        fileDirectory = new Intent(this, fileDirectory.class);
+
+        startActivity(fileDirectory);
+
+        //TODO: add in warning
+//        final Context context = this;
+//        AlertDialog.Builder builder;
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            builder = new AlertDialog.Builder(context, android.R.style.Theme_Material_Dialog_Alert);
+//        } else {
+//            builder = new AlertDialog.Builder(context);
+//        }
+//        builder.setTitle("Delete entry")
+//                .setMessage("Are you sure you want to delete this entry?")
+//                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        // continue with delete
+//                    }
+//                })
+//                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        // do nothing
+//                    }
+//                })
+//                .setIcon(android.R.drawable.ic_dialog_alert)
+//                .show();
+
+
+
     }
 
     public void applySubgraph(View view)
@@ -522,47 +648,55 @@ public class viewScreen extends AppCompatActivity {
         EditText splitText;
         FileOutputStream outStream;
         String splitTextContent;
-        String newGraph;
+        Button saveExitButton = findViewById(R.id.saveAndFileDirectoryButton);
+        int counter;
+        String[] reusedValues;
+        String newSlope;
+        String newRSquared;
+        String newStdError;
+        String newRegSlope;
 
+        //Get the string value from the text box
         splitText = findViewById(R.id.splitText);
         splitTextContent = splitText.getText().toString();
 
+        // If the string entered into the text box is not valid, alert the user and do nothing else
         if (!validEntry(splitTextContent, graphData)) {
+            //TODO: ADD EXPLINATION WHY THIS IS NOT A VALID ENTRY
             return;
         }
+
+        // If the string entered into the text bos is valid...
         else
         {
 
+            // Chop the graph file string down to the the new subsection
             newGraph = chopString(graphData, splitTextContent.split(",")[0], splitTextContent.split(",")[1]);
-            try
-            {
-                outStream = openFileOutput(getIntent().getStringExtra("GRAPHFILE"), Context.MODE_PRIVATE);
-                outStream.write(newGraph.getBytes());
-                outStream.close();
-            }
-            catch(Exception exception)
-            {
 
-            }
-
-            //get graph info to string array
+            // Initialize an array to hold the data for each specific graph
             graphArray = new String[4];
 
+            // TODO: This might not be a necessary try-catch. Experiment with removing it
             try
             {
 
+                // Split the new graph data into four strings
                 graphArray = splitGraphData(newGraph);
 
-                //format decimal to be three points
+                // Format decimal to be three points
                 DecimalFormat df = new DecimalFormat("#.0000");
 
-                slope.setText("Slope : " + df.format(getSlope(graphArray[0])));
-                standardError.setText("Standard Error : " + df.format(getStandardError(graphArray[0])));
-                rSquared.setText("R Squared : " + df.format(getRSquared(graphArray[0])));
+                newSlope = df.format(getSlope(graphArray[0]));
+                newStdError = df.format(getStandardError(graphArray[0]));
+                newRSquared = df.format(getRSquared(graphArray[0]));
+                newRegSlope = df.format(getRegressionSlope(graphArray[0]));
+
+                // Assign the new stats to the UI text boxes
+                slope.setText("Slope : " + newSlope);
+                standardError.setText("Standard Error : " + newStdError);
+                rSquared.setText("R Squared : " + newRSquared);
 
             }
-
-
             catch(Exception exception)
             {
                 graphArray = new String[4];
@@ -570,12 +704,28 @@ public class viewScreen extends AppCompatActivity {
                 graphArray[1] = "";
                 graphArray[2] = "";
                 graphArray[3] = "";
+                newSlope = "";
+                newStdError = "";
+                newRSquared = "";
+                newRegSlope = "";
             }
 
+            // Get the new meta
+            newMeta = metaData.split("\n")[0] + "\n";
+            reusedValues = metaData.split("\n")[1].split(",");
 
+            for (counter = 0; counter <= 8; counter++)
+            {
+                newMeta += reusedValues[counter] + ",";
+            }
 
-            // get regression and y intercept of co2
-            regressionSlope = getRegressionSlope(graphArray[0]);
+            newMeta += newSlope + ",";
+            newMeta += newRSquared + ",";
+            newMeta += newStdError + ",";
+            newMeta += newRegSlope;
+
+            // Get the new image
+            newImage = imageData;
 
             yIntercept = getYIntercept(graphArray[0]);
 
@@ -587,10 +737,13 @@ public class viewScreen extends AppCompatActivity {
             tempGraph = new LineGraph(graphIds[2], "Temperature", "Time", "Temperature",
                     Color.argb(100, 255, 0, 0), graphArray[2]);
             presGraph = new LineGraph(graphIds[3], "Pressure", "Time", "Pressure",
-                    Color.argb(100, 0, 255, 0), graphArray[3]);
+                    Color.argb(100, 0, 125, 0), graphArray[3]);
 
             //add a regression line to the co2 graph
-            co2Graph.addRegLine(yIntercept, regressionSlope);
+            co2Graph.addRegLine(yIntercept, Float.parseFloat(newRegSlope));
+
+            saveExitButton.setBackgroundResource(android.R.drawable.btn_default);
+            saveExitButton.setEnabled(true);
 
         }
 
@@ -635,6 +788,7 @@ public class viewScreen extends AppCompatActivity {
 
         indexOfEnd -= 1;
 
+        //add headers
         newString += tempData[0] + "\n";
 
 
@@ -662,6 +816,10 @@ public class viewScreen extends AppCompatActivity {
         String[] firstData;
         String[] lastData;
         String[] tempData;
+
+        if (graphString == ""){
+            return false;
+        }
 
         //split graph data
         tempData = graphString.split("\n");
@@ -708,10 +866,11 @@ public class viewScreen extends AppCompatActivity {
         return true;
     }
 
+
     @Override
     public void onBackPressed()
     {
-
+        return;
     }
 
 }
